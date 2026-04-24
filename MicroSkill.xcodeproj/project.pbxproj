@@ -1,0 +1,54 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		00000000000000000000000000000001 /* MicroSkillApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroSkillApp.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000002 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000003 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000004 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000005 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000006 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		00000000000000000000000000000008 /* MicroSkill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MicroSkill.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		00000000000000000000000000000092 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000093 /* CategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000094 /* LessonListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonListView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000095 /* ProgressDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressDashboardView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000096 /* SavedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000097 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000098 /* DummyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyData.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000099 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		00000000000000000000000000000010 /* MicroSkill */ = {isa = PBXGroup; children = (00000000000000000000000000000001, 00000000000000000000000000000002, 00000000000000000000000000000003, 00000000000000000000000000000004, 00000000000000000000000000000005, 00000000000000000000000000000006, 00000000000000000000000000000007, 00000000000000000000000000000092, 00000000000000000000000000000093, 00000000000000000000000000000094, 00000000000000000000000000000095, 00000000000000000000000000000096, 00000000000000000000000000000097, 00000000000000000000000000000098, 00000000000000000000000000000099); path = MicroSkill; sourceTree = "<group>"; };
+		00000000000000000000000000000011 /* Products */ = {isa = PBXGroup; children = (00000000000000000000000000000008); name = Products; sourceTree = "<group>"; };
+		00000000000000000000000000000012 /* Project */ = {isa = PBXGroup; children = (00000000000000000000000000000010, 00000000000000000000000000000011); sourceTree = "<group>"; };
+		00000000000000000000000000000020 /* MicroSkillApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000001; };
+		00000000000000000000000000000021 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000002; };
+		00000000000000000000000000000022 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000003; };
+		00000000000000000000000000000023 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000004; };
+		00000000000000000000000000000024 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000005; };
+		00000000000000000000000000000025 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000006; };
+		000000000000000000000000000000B2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000092; };
+		000000000000000000000000000000B3 /* CategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000093; };
+		000000000000000000000000000000B4 /* LessonListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000094; };
+		000000000000000000000000000000B5 /* ProgressDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000095; };
+		000000000000000000000000000000B6 /* SavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000096; };
+		000000000000000000000000000000B7 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000097; };
+		000000000000000000000000000000B8 /* DummyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000098; };
+		000000000000000000000000000000B9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000000000000099; };
+		00000000000000000000000000000030 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		00000000000000000000000000000031 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000000000000020, 00000000000000000000000000000021, 00000000000000000000000000000022, 00000000000000000000000000000023, 00000000000000000000000000000024, 00000000000000000000000000000025, 000000000000000000000000000000B2, 000000000000000000000000000000B3, 000000000000000000000000000000B4, 000000000000000000000000000000B5, 000000000000000000000000000000B6, 000000000000000000000000000000B7, 000000000000000000000000000000B8, 000000000000000000000000000000B9); runOnlyForDeploymentPostprocessing = 0; };
+		00000000000000000000000000000040 /* MicroSkill */ = {isa = PBXNativeTarget; buildConfigurationList = 00000000000000000000000000000050; buildPhases = (00000000000000000000000000000031, 00000000000000000000000000000030); buildRules = (); dependencies = (); name = MicroSkill; productName = MicroSkill; productReference = 00000000000000000000000000000008; productType = "com.apple.product-type.application"; };
+		00000000000000000000000000000050 /* Build configuration list for PBXNativeTarget "MicroSkill" */ = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000000000060, 00000000000000000000000000000061); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		00000000000000000000000000000060 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; ENABLE_TESTABILITY = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = MicroSkill/Info.plist; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.9; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		00000000000000000000000000000061 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; ENABLE_NS_ASSERTIONS = NO; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = MicroSkill/Info.plist; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SWIFT_VERSION = 5.9; TARGETED_DEVICE_FAMILY = "1,2"; VALIDATE_PRODUCT = YES; }; name = Release; };
+		00000000000000000000000000000070 /* Build configuration list for PBXProject "MicroSkill" */ = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000000000080, 00000000000000000000000000000081); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		00000000000000000000000000000080 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_CXX_LANGUAGE_DIALECT = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_TESTABILITY = YES; GCC_OPTIMIZATION_LEVEL = 0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.9; }; name = Debug; };
+		00000000000000000000000000000081 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_CXX_LANGUAGE_DIALECT = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = YES; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.9; VALIDATE_PRODUCT = YES; }; name = Release; };
+		00000000000000000000000000000090 /* Project object */ = {isa = PBXProject; attributes = {LastSwiftUpdateCheck = 1540; LastUpgradeCheck = 1540;}; buildConfigurationList = 00000000000000000000000000000070; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = 00000000000000000000000000000012; productRefGroup = 00000000000000000000000000000011; projectDirPath = ""; projectRoot = ""; targets = (00000000000000000000000000000040); };
+	};
+	rootObject = 00000000000000000000000000000090 /* Project object */;
+}
+

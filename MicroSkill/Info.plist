@@ -31,6 +31,10 @@
 	<string>MicroSkill uses notifications to remind you about your daily learning streak.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Secure your learning progress with biometric authentication.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>MicroSkill uses your location to deliver context-aware lessons (e.g., productivity tips at home, tech lessons on campus).</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>MicroSkill uses your location to deliver context-aware lessons and smart reminders based on where you are.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>

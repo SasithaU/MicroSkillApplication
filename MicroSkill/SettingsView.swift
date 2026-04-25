@@ -6,7 +6,9 @@ struct SettingsView: View {
     @AppStorage("notificationMinute") private var notificationMinute = 0
     @AppStorage("userName") private var userName = ""
     @AppStorage("userGoal") private var userGoal = ""
+    @AppStorage("locationEnabled") private var locationEnabled = false
     @StateObject private var notificationManager = NotificationManager.shared
+    @StateObject private var locationManager = LocationManager.shared
     
     var body: some View {
         List {
@@ -58,6 +60,43 @@ struct SettingsView: View {
                         .foregroundColor(BiometricAuthManager.shared.canAuthenticate ? .green : .secondary)
                     Text(BiometricAuthManager.shared.biometricType)
                         .foregroundColor(.secondary)
+                }
+            }
+            
+            Section("Location") {
+                Toggle("Context-Aware Lessons", isOn: $locationEnabled)
+                    .onChange(of: locationEnabled) { _, newValue in
+                        if newValue {
+                            locationManager.requestAuthorization()
+                            locationManager.startTracking()
+                        } else {
+                            locationManager.stopTracking()
+                        }
+                    }
+                
+                if locationManager.canUseLocation && locationEnabled {
+                    Button("Set Home Location") {
+                        locationManager.setHomeLocation()
+                    }
+                    
+                    Button("Set University Location") {
+                        locationManager.setUniversityLocation()
+                    }
+                    
+                    if locationManager.detectedContext != "unknown" {
+                        HStack {
+                            Text("Current Context")
+                            Spacer()
+                            Text(locationManager.detectedContext.capitalized)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
+                if !locationManager.canUseLocation && locationEnabled {
+                    Text("Location services are not authorized. Please enable them in Settings.")
+                        .font(.caption)
+                        .foregroundColor(.orange)
                 }
             }
             

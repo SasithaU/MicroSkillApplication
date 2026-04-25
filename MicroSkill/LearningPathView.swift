@@ -89,16 +89,8 @@ struct LessonNodeView: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Timeline + Node
-            ZStack {
-                // Connector line
-                if !isLast {
-                    Rectangle()
-                        .fill(connectorColor)
-                        .frame(width: 3)
-                        .offset(y: 24)
-                }
-                
+            // Timeline column
+            VStack(spacing: 0) {
                 // Node circle
                 ZStack {
                     Circle()
@@ -113,8 +105,17 @@ struct LessonNodeView: View {
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(nodeIconColor)
                 }
+                .frame(width: 48, height: 48)
+                
+                // Connector line to next node
+                if !isLast {
+                    Rectangle()
+                        .fill(connectorColor)
+                        .frame(width: 3)
+                        .frame(maxHeight: .infinity)
+                }
             }
-            .frame(width: 48, height: isLast ? 48 : 80)
+            .frame(width: 48)
             
             // Card
             if isUnlocked {

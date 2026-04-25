@@ -160,6 +160,10 @@ final class DataStore: ObservableObject {
         lessons.first { !$0.isCompleted }
     }
     
+    func firstIncompleteLesson(inCategory category: String) -> Lesson? {
+        lessons.first { !$0.isCompleted && $0.category == category }
+    }
+    
     func isLessonUnlocked(_ lesson: Lesson) -> Bool {
         // First lesson is always unlocked
         if let first = lessons.first, first.id == lesson.id {

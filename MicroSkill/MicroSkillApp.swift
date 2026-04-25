@@ -10,6 +10,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound, .badge])
     }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        switch response.actionIdentifier {
+        case "START_LESSON":
+            NotificationCenter.default.post(name: .startLessonFromNotification, object: nil)
+        case "REMIND_LATER":
+            NotificationManager.shared.scheduleDailyReminder(at: Calendar.current.component(.hour, from: Date().addingTimeInterval(3600)), minute: 0)
+        default:
+            break
+        }
+        completionHandler()
+    }
 }
 
 @main
@@ -20,6 +32,11 @@ struct MicroSkillApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(DataStore.shared)
+                .environmentObject(LocationManager.shared)
         }
     }
+}
+
+extension Notification.Name {
+    static let startLessonFromNotification = Notification.Name("startLessonFromNotification")
 }

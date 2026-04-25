@@ -34,7 +34,7 @@ struct QuizView: View {
                                 option: option,
                                 index: index,
                                 selectedIndex: selectedIndex,
-                                showResult: false,
+                                showResult: showResult,
                                 correctIndex: quiz.correctAnswerIndex
                             ) {
                                 if !showResult {
@@ -43,7 +43,7 @@ struct QuizView: View {
                                     }
                                 }
                             }
-                            .accessibilityLabel("Option \(Character(UnicodeScalar(65 + index)!)): \(option)")
+                            .accessibilityLabel("Option \(String(Character(UnicodeScalar(65 + index)!))): \(option)")
                             .accessibilityHint("Double tap to select this answer")
                         }
                     }
@@ -120,7 +120,7 @@ struct QuizOptionButton: View {
                               Color.secondary.opacity(0.1))
                         .frame(width: 36, height: 36)
                     
-                    Text("\(Character(UnicodeScalar(65 + index)!))")
+                    Text("\(String(Character(UnicodeScalar(65 + index)!)))")
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(state == .correct ? Theme.success :
                                         state == .wrong ? .red :

@@ -10,26 +10,43 @@ struct LessonListView: View {
     
     var body: some View {
         List(filteredLessons) { lesson in
-            NavigationLink(destination: LessonDetailView(lesson: lesson)) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(lesson.title)
-                            .font(.headline)
-                        Text(lesson.content)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                    Spacer()
-                    if lesson.isCompleted {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    }
+            let unlocked = store.isLessonUnlocked(lesson)
+            
+            if unlocked {
+                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                    lessonRow(lesson: lesson, unlocked: true)
                 }
-                .padding(.vertical, 4)
+            } else {
+                lessonRow(lesson: lesson, unlocked: false)
             }
         }
         .navigationTitle(category)
+    }
+    
+    private func lessonRow(lesson: Lesson, unlocked: Bool) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(lesson.title)
+                    .font(.headline)
+                    .foregroundColor(unlocked ? .primary : .secondary)
+                Text(lesson.content)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+            if lesson.isCompleted {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(Theme.success)
+                    .font(.title3)
+            } else if !unlocked {
+                Image(systemName: "lock.fill")
+                    .foregroundColor(.secondary)
+                    .font(.title3)
+            }
+        }
+        .padding(.vertical, 4)
+        .opacity(unlocked ? 1.0 : 0.6)
     }
 }
 

@@ -136,6 +136,72 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("View Learning Path. See your progress and next steps")
                         
+                        // Context-Aware Recommendation
+                        if LocationManager.shared.detectedContext != "unknown" {
+                            let context = LocationManager.shared.detectedContext
+                            let recommendedCategory = LocationManager.shared.recommendedCategory(for: context)
+                            let contextLesson = store.firstIncompleteLesson(inCategory: recommendedCategory)
+                            
+                            if let lesson = contextLesson {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "location.fill")
+                                            .foregroundStyle(Theme.primary)
+                                        Text("Recommended for \(context.capitalized)")
+                                            .font(Theme.headline())
+                                            .foregroundStyle(Theme.primary)
+                                    }
+                                    
+                                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack {
+                                                Text(lesson.category)
+                                                    .font(Theme.caption())
+                                                    .foregroundStyle(Theme.primary)
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 4)
+                                                    .background(Theme.primary.opacity(0.12))
+                                                    .cornerRadius(8)
+                                                
+                                                Spacer()
+                                                
+                                                Image(systemName: "chevron.right")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Text(lesson.title)
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+                                            
+                                            Text(lesson.content)
+                                                .font(Theme.body())
+                                                .foregroundColor(.secondary)
+                                                .lineLimit(2)
+                                            
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "location.circle.fill")
+                                                    .foregroundStyle(Theme.heroGradient)
+                                                Text("Start Now")
+                                                    .font(Theme.caption())
+                                                    .foregroundStyle(Theme.primary)
+                                            }
+                                            .padding(.top, 4)
+                                        }
+                                        .padding()
+                                        .background(Theme.cardBackground)
+                                        .cornerRadius(Theme.cardCornerRadius)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                                .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Context recommendation: \(lesson.title) in \(lesson.category) for \(context). Start now.")
+                                }
+                            }
+                        }
+                        
                         // Continue Learning
                         if let lesson = nextLesson {
                             VStack(alignment: .leading, spacing: 12) {

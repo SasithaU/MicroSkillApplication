@@ -37,6 +37,8 @@
 		0000001C /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001C /* Charts.framework */; };
 		0000001D /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001D /* LocalAuthentication.framework */; };
 		0000001E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001E /* WidgetKit.framework */; };
+		0000001F /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001F /* CoreLocation.framework */; };
+		00000020 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000020 /* LocationManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +72,8 @@
 		1000001C /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = System/Library/Frameworks/Charts.framework; sourceTree = SDKROOT; };
 		1000001D /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
 		1000001E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		1000001F /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		10000020 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		20000001 /* MicroSkill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MicroSkill.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -83,6 +87,7 @@
 				0000001C /* Charts.framework in Frameworks */,
 				0000001D /* LocalAuthentication.framework in Frameworks */,
 				0000001E /* WidgetKit.framework in Frameworks */,
+				0000001F /* CoreLocation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +123,7 @@
 				10000018 /* BiometricAuthManager.swift */,
 				10000019 /* MicroSkillWidget.swift */,
 				1000001A /* MicroSkillWidgetBundle.swift */,
+				10000020 /* LocationManager.swift */,
 				20000002 /* Info.plist */,
 			);
 			path = MicroSkill;
@@ -138,6 +144,7 @@
 				1000001C /* Charts.framework */,
 				1000001D /* LocalAuthentication.framework */,
 				1000001E /* WidgetKit.framework */,
+				1000001F /* CoreLocation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -228,6 +235,7 @@
 				00000018 /* BiometricAuthManager.swift in Sources */,
 				00000019 /* MicroSkillWidget.swift in Sources */,
 				0000001A /* MicroSkillWidgetBundle.swift in Sources */,
+				00000020 /* LocationManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

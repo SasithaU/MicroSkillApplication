@@ -25,6 +25,7 @@ struct CategoriesView: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("\(category) category. \(DummyData.lessons.filter { $0.category == category }.count) lessons available")
                         }
 
                         Spacer(minLength: 40)

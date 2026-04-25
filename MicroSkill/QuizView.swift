@@ -30,7 +30,7 @@ struct QuizView: View {
                     // Options
                     VStack(spacing: 12) {
                         ForEach(Array(quiz.options.enumerated()), id: \.offset) { index, option in
-                            QuizOptionButton(
+                        QuizOptionButton(
                                 option: option,
                                 index: index,
                                 selectedIndex: selectedIndex,
@@ -43,6 +43,8 @@ struct QuizView: View {
                                     }
                                 }
                             }
+                            .accessibilityLabel("Option \(Character(UnicodeScalar(65 + index)!)): \(option)")
+                            .accessibilityHint("Double tap to select this answer")
                         }
                     }
                     
@@ -62,6 +64,8 @@ struct QuizView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(selectedIndex == nil)
+                    .accessibilityLabel("Submit answer")
+                    .accessibilityHint(selectedIndex == nil ? "Select an answer first" : "Double tap to submit your answer")
                     
                     Spacer(minLength: 40)
                 }

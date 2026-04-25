@@ -44,6 +44,7 @@ struct LessonDetailView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing, 8)
+                        .accessibilityLabel((currentLesson?.isSaved ?? false) ? "Remove bookmark" : "Bookmark lesson")
                         
                         if lesson.isCompleted {
                             HStack(spacing: 4) {
@@ -98,6 +99,7 @@ struct LessonDetailView: View {
                                 .cornerRadius(Theme.cardCornerRadius)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Start quiz for \(lesson.title)")
                         }
                         
                         Button {
@@ -116,6 +118,7 @@ struct LessonDetailView: View {
                             .cornerRadius(Theme.cardCornerRadius)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Mark \(lesson.title) as completed")
                     } else {
                         // Next lesson navigation
                         if let next = store.nextLesson(after: lesson) {
@@ -134,6 +137,7 @@ struct LessonDetailView: View {
                                 .cornerRadius(Theme.cardCornerRadius)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Next lesson: \(next.title)")
                         } else {
                             VStack(spacing: 8) {
                                 Image(systemName: "star.circle.fill")

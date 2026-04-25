@@ -95,6 +95,7 @@ struct ProfileView: View {
                             .cardStyle()
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Settings. Notifications, account, and more")
                         
                         Spacer(minLength: 40)
                     }

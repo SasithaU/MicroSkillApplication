@@ -36,25 +36,25 @@ enum Theme {
     static let cardShadowOpacity: CGFloat = 0.08
     static let spacing: CGFloat = 16
     
-    // MARK: - Typography
+    // MARK: - Typography (Dynamic Type aware)
     static func largeTitle() -> Font {
-        .system(size: 34, weight: .bold, design: .rounded)
+        .system(.largeTitle, design: .rounded, weight: .bold)
     }
     
     static func title() -> Font {
-        .system(size: 28, weight: .bold, design: .rounded)
+        .system(.title, design: .rounded, weight: .bold)
     }
     
     static func headline() -> Font {
-        .system(size: 20, weight: .semibold, design: .rounded)
+        .system(.headline, design: .rounded, weight: .semibold)
     }
     
     static func body() -> Font {
-        .system(size: 17, weight: .regular, design: .rounded)
+        .system(.body, design: .rounded, weight: .regular)
     }
     
     static func caption() -> Font {
-        .system(size: 13, weight: .medium, design: .rounded)
+        .system(.caption, design: .rounded, weight: .medium)
     }
 }
 

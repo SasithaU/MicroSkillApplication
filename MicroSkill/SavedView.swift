@@ -38,6 +38,7 @@ struct SavedView: View {
                                     SavedLessonRow(lesson: lesson)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Saved lesson: \(lesson.title) in \(lesson.category)")
                             }
                         }
                         .padding(.horizontal, Theme.padding)

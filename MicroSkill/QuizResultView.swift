@@ -6,6 +6,7 @@ struct QuizResultView: View {
     let correctAnswer: String
     @EnvironmentObject var store: DataStore
     @Environment(\.dismiss) private var dismiss
+    @State private var didMarkComplete = false
     
     var body: some View {
         VStack(spacing: 24) {
@@ -61,6 +62,7 @@ struct QuizResultView: View {
                             .cornerRadius(Theme.cardCornerRadius)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Next lesson: \(next.title)")
                     } else {
                         Button {
                             dismiss()
@@ -76,6 +78,7 @@ struct QuizResultView: View {
                             .cornerRadius(Theme.cardCornerRadius)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Back to home dashboard")
                     }
                 } else {
                     Button {
@@ -92,6 +95,7 @@ struct QuizResultView: View {
                         .cornerRadius(Theme.cardCornerRadius)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Try quiz again")
                 }
             }
             .padding(.horizontal, Theme.padding)
@@ -102,6 +106,12 @@ struct QuizResultView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: Lesson.self) { nextLesson in
             LessonDetailView(lesson: nextLesson)
+        }
+        .onAppear {
+            if isCorrect && !didMarkComplete && !lesson.isCompleted {
+                store.markLessonCompleted(lesson)
+                didMarkComplete = true
+            }
         }
     }
 }

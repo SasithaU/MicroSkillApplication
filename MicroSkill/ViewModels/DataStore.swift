@@ -34,6 +34,7 @@ final class DataStore: ObservableObject {
         }
         
         fetchAll()
+        updateProgress()
         refreshWidget()
     }
     
@@ -136,9 +137,9 @@ final class DataStore: ObservableObject {
             } else {
                 let newEntity = ProgressEntity(context: stack.context)
                 newEntity.completedLessons = 0
-                newEntity.streak = 1
+                newEntity.streak = 0
                 stack.save()
-                progress = UserProgress(streak: 1)
+                progress = UserProgress(streak: 0)
             }
         } catch {
             print("Fetch progress error: \(error)")
@@ -191,13 +192,56 @@ final class DataStore: ObservableObject {
         }
     }
     
+    // MARK: - Streak Calculation
+    
+    func calculateStreak() -> Int {
+        let calendar = Calendar.current
+        let completedLessons = lessons.filter { $0.completionDate != nil }
+        
+        guard !completedLessons.isEmpty else { return 0 }
+        
+        // Get unique completion days (normalized to start of day)
+        let completionDays = completedLessons.compactMap { $0.completionDate }
+            .map { calendar.startOfDay(for: $0) }
+        
+        let uniqueDays = Array(Set(completionDays)).sorted(by: >)
+        
+        guard let mostRecentDay = uniqueDays.first else { return 0 }
+        
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        
+        // If the most recent completion is not today or yesterday, streak is broken
+        if mostRecentDay != today && mostRecentDay != yesterday {
+            return 0
+        }
+        
+        // Count consecutive days backwards from most recent
+        var streak = 1
+        var checkDay = mostRecentDay
+        
+        for day in uniqueDays.dropFirst() {
+            let expectedPrevious = calendar.date(byAdding: .day, value: -1, to: checkDay)!
+            if day == expectedPrevious {
+                streak += 1
+                checkDay = day
+            } else {
+                break
+            }
+        }
+        
+        return streak
+    }
+    
     private func updateProgress() {
         let completed = lessons.filter(\.isCompleted).count
+        let streak = calculateStreak()
         let request: NSFetchRequest<ProgressEntity> = NSFetchRequest(entityName: "ProgressEntity")
         
         do {
             if let entity = try stack.context.fetch(request).first {
                 entity.completedLessons = Int32(completed)
+                entity.streak = Int32(streak)
                 stack.save()
                 fetchProgress()
                 refreshWidget()

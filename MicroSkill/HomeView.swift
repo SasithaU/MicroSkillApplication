@@ -71,6 +71,8 @@ struct HomeView: View {
                             RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
                                 .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
                         )
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(store.progress.streak) day learning streak. Keep it up!")
                         
                         // Progress Overview
                         VStack(alignment: .leading, spacing: 12) {
@@ -132,6 +134,7 @@ struct HomeView: View {
                             .cardStyle()
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("View Learning Path. See your progress and next steps")
                         
                         // Continue Learning
                         if let lesson = nextLesson {
@@ -184,6 +187,7 @@ struct HomeView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Continue learning: \(lesson.title) in \(lesson.category). Resume lesson.")
                             }
                         }
                         

@@ -6,6 +6,10 @@ struct LessonDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showQuiz = false
     
+    var currentLesson: Lesson? {
+        store.lessons.first(where: { $0.id == lesson.id })
+    }
+    
     var quiz: Quiz? {
         store.quizForLesson(lesson.id)
     }
@@ -27,6 +31,19 @@ struct LessonDetailView: View {
                             .cornerRadius(8)
                         
                         Spacer()
+                        
+                        // Bookmark button
+                        Button {
+                            if let current = currentLesson {
+                                store.toggleSaveLesson(current)
+                            }
+                        } label: {
+                            Image(systemName: (currentLesson?.isSaved ?? false) ? "bookmark.fill" : "bookmark")
+                                .font(.title3)
+                                .foregroundColor((currentLesson?.isSaved ?? false) ? Theme.primary : .secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 8)
                         
                         if lesson.isCompleted {
                             HStack(spacing: 4) {

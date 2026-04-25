@@ -7,6 +7,8 @@ struct Lesson: Identifiable, Codable, Hashable {
     var category: String
     var isCompleted: Bool = false
     var order: Int
+    var completionDate: Date?
+    var isSaved: Bool = false
 }
 
 struct Quiz: Identifiable, Codable {

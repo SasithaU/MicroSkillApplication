@@ -20,7 +20,7 @@ struct LessonDetailView: View {
             
             ScrollView {
                 VStack(spacing: Theme.spacing * 1.5) {
-                    // Category Badge
+                    // Category Badge + Difficulty
                     HStack {
                         Text(lesson.category)
                             .font(Theme.caption())
@@ -28,6 +28,15 @@ struct LessonDetailView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(Theme.primary.opacity(0.12))
+                            .cornerRadius(8)
+                        
+                        // Difficulty Badge
+                        Text(lesson.difficulty.capitalized)
+                            .font(Theme.caption())
+                            .foregroundColor(difficultyColor(lesson.difficulty))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(difficultyColor(lesson.difficulty).opacity(0.12))
                             .cornerRadius(8)
                         
                         Spacer()
@@ -58,6 +67,34 @@ struct LessonDetailView: View {
                             .background(Theme.success.opacity(0.12))
                             .cornerRadius(8)
                         }
+                    }
+                    
+                    // Adaptive Path Warning for Advanced Lessons
+                    if lesson.difficulty == "advanced" && !LearningModel.shared.isReadyForAdvanced() {
+                        HStack(spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(Theme.accent)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Advanced Lesson")
+                                    .font(Theme.caption())
+                                    .foregroundColor(Theme.accent)
+                                    .textCase(.uppercase)
+                                
+                                Text("Complete more beginner lessons to unlock your full potential.")
+                                    .font(Theme.body())
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Theme.accent.opacity(0.08))
+                        .cornerRadius(Theme.cardCornerRadius)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
+                        )
                     }
                     
                     // Title
@@ -169,6 +206,19 @@ struct LessonDetailView: View {
         }
         .navigationDestination(for: Lesson.self) { nextLesson in
             LessonDetailView(lesson: nextLesson)
+        }
+    }
+    
+    private func difficultyColor(_ difficulty: String) -> Color {
+        switch difficulty {
+        case "beginner":
+            return Theme.success
+        case "intermediate":
+            return Theme.accent
+        case "advanced":
+            return Color.red
+        default:
+            return .secondary
         }
     }
 }

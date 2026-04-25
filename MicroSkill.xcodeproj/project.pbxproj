@@ -39,6 +39,7 @@
 		0000001E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001E /* WidgetKit.framework */; };
 		0000001F /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001F /* CoreLocation.framework */; };
 		00000020 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000020 /* LocationManager.swift */; };
+		00000021 /* LearningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000021 /* LearningModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +75,7 @@
 		1000001E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		1000001F /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		10000020 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		10000021 /* LearningModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningModel.swift; sourceTree = "<group>"; };
 		20000001 /* MicroSkill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MicroSkill.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -124,6 +126,7 @@
 				10000019 /* MicroSkillWidget.swift */,
 				1000001A /* MicroSkillWidgetBundle.swift */,
 				10000020 /* LocationManager.swift */,
+				10000021 /* LearningModel.swift */,
 				20000002 /* Info.plist */,
 			);
 			path = MicroSkill;
@@ -236,6 +239,7 @@
 				00000019 /* MicroSkillWidget.swift in Sources */,
 				0000001A /* MicroSkillWidgetBundle.swift in Sources */,
 				00000020 /* LocationManager.swift in Sources */,
+				00000021 /* LearningModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -48,7 +48,72 @@ struct InsightsView: View {
                         value: "\(store.totalStudyTimeMinutes()) min",
                         subtitle: "Total time invested"
                     )
+                    
+                    // NEW: Optimal Time Prediction from LearningModel
+                    InsightCard(
+                        icon: "brain.head.profile",
+                        iconColor: Theme.primary,
+                        title: "Optimal Time",
+                        value: LearningModel.shared.optimalTimeDescription(),
+                        subtitle: "AI-predicted best time"
+                    )
+                    
+                    // NEW: Consistency Score
+                    let consistency = LearningModel.shared.consistencyScore()
+                    InsightCard(
+                        icon: "chart.pie.fill",
+                        iconColor: consistency > 0.5 ? Theme.success : Theme.accent,
+                        title: "Consistency",
+                        value: "\(Int(consistency * 100))%",
+                        subtitle: consistency > 0.5 ? "Great habits!" : "Keep building"
+                    )
                 }
+                
+                // NEW: Readiness for Advanced
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "graduationcap.fill")
+                            .foregroundColor(Theme.primary)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Advanced Readiness")
+                                .font(Theme.headline())
+                            Text(LearningModel.shared.isReadyForAdvanced() ? "You're ready for advanced lessons!" : "Complete more lessons to unlock advanced content")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: LearningModel.shared.isReadyForAdvanced() ? "checkmark.seal.fill" : "lock.fill")
+                            .font(.title2)
+                            .foregroundColor(LearningModel.shared.isReadyForAdvanced() ? Theme.success : .secondary)
+                    }
+                }
+                .padding()
+                .cardStyle()
+                
+                // NEW: Peak Performance Category
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "trophy.fill")
+                            .foregroundColor(Color.yellow)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Peak Performance")
+                                .font(Theme.headline())
+                            Text("Your strongest category: \(LearningModel.shared.peakPerformanceCategory())")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                    }
+                }
+                .padding()
+                .cardStyle()
                 
                 // Average Card
                 VStack(alignment: .leading, spacing: 12) {

@@ -26,9 +26,21 @@ struct LessonListView: View {
     private func lessonRow(lesson: Lesson, unlocked: Bool) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(lesson.title)
-                    .font(.headline)
-                    .foregroundColor(unlocked ? .primary : .secondary)
+                HStack(spacing: 6) {
+                    Text(lesson.title)
+                        .font(.headline)
+                        .foregroundColor(unlocked ? .primary : .secondary)
+                    
+                    // Difficulty Badge
+                    Text(lesson.difficulty.capitalized)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(difficultyColor(lesson.difficulty))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(difficultyColor(lesson.difficulty).opacity(0.12))
+                        .cornerRadius(4)
+                }
+                
                 Text(lesson.content)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -47,6 +59,19 @@ struct LessonListView: View {
         }
         .padding(.vertical, 4)
         .opacity(unlocked ? 1.0 : 0.6)
+    }
+    
+    private func difficultyColor(_ difficulty: String) -> Color {
+        switch difficulty {
+        case "beginner":
+            return Theme.success
+        case "intermediate":
+            return Theme.accent
+        case "advanced":
+            return Color.red
+        default:
+            return .secondary
+        }
     }
 }
 

@@ -49,7 +49,12 @@ final class CoreDataStack {
         lessonIsSaved.attributeType = .booleanAttributeType
         lessonIsSaved.defaultValue = false
         
-        lessonEntity.properties = [lessonId, lessonTitle, lessonContent, lessonCategory, lessonIsCompleted, lessonOrder, lessonCompletedDate, lessonIsSaved]
+        let lessonDifficulty = NSAttributeDescription()
+        lessonDifficulty.name = "difficulty"
+        lessonDifficulty.attributeType = .stringAttributeType
+        lessonDifficulty.defaultValue = "beginner"
+        
+        lessonEntity.properties = [lessonId, lessonTitle, lessonContent, lessonCategory, lessonIsCompleted, lessonOrder, lessonCompletedDate, lessonIsSaved, lessonDifficulty]
         
         // QuizEntity
         let quizEntity = NSEntityDescription()
@@ -139,6 +144,7 @@ public class LessonEntity: NSManagedObject {
     @NSManaged public var order: Int32
     @NSManaged public var completionDate: Date?
     @NSManaged public var isSaved: Bool
+    @NSManaged public var difficulty: String
 }
 
 @objc(QuizEntity)

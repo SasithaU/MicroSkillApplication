@@ -24,11 +24,18 @@ final class DataStore: ObservableObject {
         
         let context = stack.context
         
-        // Check if data already exists
+        // Check if data already exists and if model version matches
         let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
         let existing = (try? context.count(for: request)) ?? 0
         
-        if existing == 0 {
+        // Check if we need to reset (model changed - difficulty field added)
+        let needsReset = existing > 0 && !storeHasDifficultyField()
+        
+        if needsReset {
+            resetAllData()
+        }
+        
+        if existing == 0 || needsReset {
             // Seed with dummy data
             seedDummyData(context: context)
         }
@@ -36,6 +43,31 @@ final class DataStore: ObservableObject {
         fetchAll()
         updateProgress()
         refreshWidget()
+    }
+    
+    private func storeHasDifficultyField() -> Bool {
+        let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
+        request.fetchLimit = 1
+        do {
+            if let entity = try stack.context.fetch(request).first {
+                // Try to access difficulty - if it doesn't exist, this will fail silently in Core Data
+                _ = entity.value(forKey: "difficulty")
+                return true
+            }
+        } catch {
+            return false
+        }
+        return false
+    }
+    
+    private func resetAllData() {
+        let entities = ["LessonEntity", "QuizEntity", "ProgressEntity"]
+        for entityName in entities {
+            let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+            _ = try? stack.context.execute(deleteRequest)
+        }
+        stack.save()
     }
     
     private func seedDummyData(context: NSManagedObjectContext) {
@@ -50,6 +82,7 @@ final class DataStore: ObservableObject {
             entity.content = lesson.content
             entity.category = lesson.category
             entity.order = Int32(lesson.order)
+            entity.difficulty = lesson.difficulty
             
             // Mark first 3 lessons as completed with scattered dates
             if index < 3 {
@@ -88,16 +121,17 @@ final class DataStore: ObservableObject {
         do {
             let entities = try stack.context.fetch(request)
             lessons = entities.map {
-                Lesson(
-                    id: $0.id,
-                    title: $0.title,
-                    content: $0.content,
-                    category: $0.category,
-                    isCompleted: $0.isCompleted,
-                    order: Int($0.order),
-                    completionDate: $0.completionDate,
-                    isSaved: $0.isSaved
-                )
+                    Lesson(
+                        id: $0.id,
+                        title: $0.title,
+                        content: $0.content,
+                        category: $0.category,
+                        isCompleted: $0.isCompleted,
+                        order: Int($0.order),
+                        completionDate: $0.completionDate,
+                        isSaved: $0.isSaved,
+                        difficulty: $0.difficulty
+                    )
             }
         } catch {
             print("Fetch lessons error: \(error)")

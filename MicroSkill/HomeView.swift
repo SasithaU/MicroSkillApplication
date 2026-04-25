@@ -136,6 +136,61 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("View Learning Path. See your progress and next steps")
                         
+                        // Personalized Recommendation from LearningModel
+                        let recommendation = LearningModel.shared.personalizedRecommendation()
+                        HStack(spacing: 12) {
+                            Image(systemName: "sparkles")
+                                .font(.title3)
+                                .foregroundStyle(Theme.heroGradient)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Personalized Tip")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                
+                                Text(recommendation)
+                                    .font(Theme.body())
+                                    .foregroundColor(.primary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                .fill(Theme.primary.opacity(0.06))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
+                        )
+                        .accessibilityLabel("Personalized tip: \(recommendation)")
+                        
+                        // Recommended Category
+                        let recommendedCategory = LearningModel.shared.recommendedNextCategory()
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(Theme.primary)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Recommended Focus")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                
+                                Text(recommendedCategory)
+                                    .font(Theme.headline())
+                                    .foregroundColor(.primary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .cardStyle()
+                        .accessibilityLabel("Recommended focus category: \(recommendedCategory)")
+                        
                         // Context-Aware Recommendation
                         if LocationManager.shared.detectedContext != "unknown" {
                             let context = LocationManager.shared.detectedContext

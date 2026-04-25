@@ -1,9 +1,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject var store: DataStore
     @State private var userName = UserDefaults.standard.string(forKey: "userName") ?? "User"
-    @State private var lessons: [Lesson] = DummyData.lessons
-    @State private var streak: Int = 3
     
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -16,12 +15,12 @@ struct HomeView: View {
     }
     
     private var nextLesson: Lesson? {
-        lessons.first { !$0.isCompleted }
+        store.firstIncompleteLesson()
     }
     
     private var progressValue: Double {
-        let completed = lessons.filter(\.isCompleted).count
-        return lessons.isEmpty ? 0 : Double(completed) / Double(lessons.count)
+        let completed = store.lessons.filter(\.isCompleted).count
+        return store.lessons.isEmpty ? 0 : Double(completed) / Double(store.lessons.count)
     }
     
     var body: some View {
@@ -52,7 +51,7 @@ struct HomeView: View {
                                 .foregroundStyle(Theme.accent)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("\(streak) Day Streak")
+                                Text("\(store.progress.streak) Day Streak")
                                     .font(Theme.headline())
                                     .foregroundColor(.primary)
                                 
@@ -100,12 +99,39 @@ struct HomeView: View {
                             }
                             .frame(height: 12)
                             
-                            Text("\(lessons.filter(\.isCompleted).count) of \(lessons.count) lessons completed")
+                            Text("\(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) lessons completed")
                                 .font(Theme.caption())
                                 .foregroundColor(.secondary)
                         }
                         .padding()
                         .cardStyle()
+                        
+                        // View Learning Path
+                        NavigationLink(destination: LearningPathView()) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "signpost.right.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(Theme.primary)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("View Learning Path")
+                                        .font(Theme.headline())
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("See your progress and next steps")
+                                        .font(Theme.caption())
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .cardStyle()
+                        }
+                        .buttonStyle(.plain)
                         
                         // Continue Learning
                         if let lesson = nextLesson {
@@ -113,7 +139,7 @@ struct HomeView: View {
                                 Text("Continue Learning")
                                     .font(Theme.headline())
                                 
-                                NavigationLink(destination: Text("Lesson Detail - Coming in Turn 2")) {
+                                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
                                     VStack(alignment: .leading, spacing: 8) {
                                         HStack {
                                             Text(lesson.category)
@@ -174,4 +200,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
+        .environmentObject(DataStore.shared)
 }

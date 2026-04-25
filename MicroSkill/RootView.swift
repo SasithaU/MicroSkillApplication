@@ -6,6 +6,9 @@ struct RootView: View {
     var body: some View {
         if hasCompletedOnboarding {
             MainTabView()
+                .onAppear {
+                    DataStore.shared.loadData()
+                }
         } else {
             SplashView()
         }

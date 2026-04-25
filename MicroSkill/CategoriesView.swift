@@ -2,12 +2,12 @@ import SwiftUI
 
 struct CategoriesView: View {
     let categories = ["Tech", "Productivity", "General Knowledge"]
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Theme.background.ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: Theme.spacing) {
                         Text("Browse Topics")
@@ -15,14 +15,18 @@ struct CategoriesView: View {
                             .foregroundStyle(Theme.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, 8)
-                        
+
                         ForEach(categories, id: \.self) { category in
-                            NavigationLink(destination: LessonListView(category: category)) {
-                                CategoryCard(category: category, icon: categoryIcon(for: category), color: categoryColor(for: category))
+                            NavigationLink(value: category) {
+                                CategoryCard(
+                                    category: category,
+                                    icon: categoryIcon(for: category),
+                                    color: categoryColor(for: category)
+                                )
                             }
                             .buttonStyle(.plain)
                         }
-                        
+
                         Spacer(minLength: 40)
                     }
                     .padding(.horizontal, Theme.padding)
@@ -30,9 +34,12 @@ struct CategoriesView: View {
             }
             .navigationTitle("Categories")
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(for: String.self) { category in
+                LessonListView(category: category)
+            }
         }
     }
-    
+
     func categoryIcon(for category: String) -> String {
         switch category {
         case "Tech": return "laptopcomputer"
@@ -41,7 +48,7 @@ struct CategoriesView: View {
         default: return "book.fill"
         }
     }
-    
+
     func categoryColor(for category: String) -> Color {
         switch category {
         case "Tech": return .indigo
@@ -56,35 +63,35 @@ struct CategoryCard: View {
     let category: String
     let icon: String
     let color: Color
-    
+
     private var lessonCount: Int {
         DummyData.lessons.filter { $0.category == category }.count
     }
-    
+
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(color.opacity(0.15))
                     .frame(width: 56, height: 56)
-                
+
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundStyle(color)
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(category)
                     .font(Theme.headline())
                     .foregroundColor(.primary)
-                
+
                 Text("\(lessonCount) lessons")
                     .font(Theme.caption())
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .font(.subheadline.weight(.semibold))
                 .foregroundColor(.secondary)
@@ -97,3 +104,4 @@ struct CategoryCard: View {
 #Preview {
     CategoriesView()
 }
+

@@ -97,23 +97,30 @@ struct OnboardingView: View {
     
     private var continueButton: some View {
         Button {
-            if !userName.isEmpty && !selectedGoal.isEmpty {
-                UserDefaults.standard.set(userName, forKey: "userName")
-                UserDefaults.standard.set(selectedGoal, forKey: "userGoal")
-                UserDefaults.standard.set(true, forKey: "isFirstTimeUser")
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    hasCompletedOnboarding = true
-                }
+            guard !userName.isEmpty, !selectedGoal.isEmpty else { return }
+            UserDefaults.standard.set(userName, forKey: "userName")
+            UserDefaults.standard.set(selectedGoal, forKey: "userGoal")
+            UserDefaults.standard.set(true, forKey: "isFirstTimeUser")
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                hasCompletedOnboarding = true
             }
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 Text("Get Started")
-                Image(systemName: "arrow.right")
+                    .font(Theme.headline())
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.title3)
             }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                    .fill(Theme.primary)
+            )
+            .foregroundColor(.white)
         }
-        .buttonStyle(PrimaryButtonStyle())
         .disabled(userName.isEmpty || selectedGoal.isEmpty)
-        .opacity(userName.isEmpty || selectedGoal.isEmpty ? 0.5 : 1.0)
+        .opacity(userName.isEmpty || selectedGoal.isEmpty ? 0.45 : 1.0)
     }
 }
 

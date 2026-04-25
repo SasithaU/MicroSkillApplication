@@ -1,9 +1,12 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+    @AppStorage("notificationHour") private var notificationHour = 9
+    @AppStorage("notificationMinute") private var notificationMinute = 0
     @AppStorage("userName") private var userName = ""
     @AppStorage("userGoal") private var userGoal = ""
+    @StateObject private var notificationManager = NotificationManager.shared
     
     var body: some View {
         List {
@@ -25,11 +28,35 @@ struct SettingsView: View {
             
             Section("Preferences") {
                 Toggle("Daily Reminders", isOn: $notificationsEnabled)
+                    .onChange(of: notificationsEnabled) { _, newValue in
+                        if newValue {
+                            notificationManager.requestAuthorization()
+                            notificationManager.scheduleDailyReminder(at: notificationHour, minute: notificationMinute)
+                        } else {
+                            notificationManager.cancelAllNotifications()
+                        }
+                    }
                 
+                if notificationsEnabled {
+                    DatePicker("Reminder Time",
+                               selection: reminderTimeBinding,
+                               displayedComponents: .hourAndMinute)
+                }
+                
+                if !notificationManager.isAuthorized && notificationsEnabled {
+                    Text("Notifications are not authorized. Please enable them in Settings.")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+            }
+            
+            Section("Security") {
                 HStack {
-                    Text("Reminder Time")
+                    Text("Biometric Authentication")
                     Spacer()
-                    Text("9:00 AM")
+                    Image(systemName: BiometricAuthManager.shared.canAuthenticate ? "checkmark.shield.fill" : "xmark.shield")
+                        .foregroundColor(BiometricAuthManager.shared.canAuthenticate ? .green : .secondary)
+                    Text(BiometricAuthManager.shared.biometricType)
                         .foregroundColor(.secondary)
                 }
             }
@@ -61,12 +88,36 @@ struct SettingsView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            notificationManager.checkAuthorization()
+        }
+    }
+    
+    private var reminderTimeBinding: Binding<Date> {
+        Binding(
+            get: {
+                var components = DateComponents()
+                components.hour = notificationHour
+                components.minute = notificationMinute
+                return Calendar.current.date(from: components) ?? Date()
+            },
+            set: { newDate in
+                let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                notificationHour = components.hour ?? 9
+                notificationMinute = components.minute ?? 0
+                if notificationsEnabled {
+                    notificationManager.scheduleDailyReminder(at: notificationHour, minute: notificationMinute)
+                }
+            }
+        )
     }
     
     private func resetOnboarding() {
         UserDefaults.standard.set(false, forKey: "isFirstTimeUser")
         UserDefaults.standard.removeObject(forKey: "userName")
         UserDefaults.standard.removeObject(forKey: "userGoal")
+        BiometricAuthManager.shared.reset()
+        notificationManager.cancelAllNotifications()
     }
 }
 

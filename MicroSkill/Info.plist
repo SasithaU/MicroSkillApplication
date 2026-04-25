@@ -27,6 +27,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>MicroSkill uses notifications to remind you about your daily learning streak.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Secure your learning progress with biometric authentication.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>

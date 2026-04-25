@@ -21,15 +21,18 @@ struct SplashView: View {
                         .scaledToFit()
                         .frame(width: 72, height: 72)
                         .foregroundStyle(Theme.heroGradient)
+                        .accessibilityLabel("Book icon")
                 }
                 
                 Text("MicroSkill")
                     .font(Theme.largeTitle())
                     .foregroundStyle(Theme.primary)
+                    .accessibilityLabel("Micro Skill app")
                 
                 Text("Learn something new every day")
                     .font(Theme.body())
                     .foregroundColor(.secondary)
+                    .accessibilityLabel("Tagline: Learn something new every day")
             }
             .scaleEffect(scale)
             .opacity(opacity)

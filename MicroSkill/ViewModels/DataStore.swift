@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 import SwiftUI
+import WidgetKit
 
 @MainActor
 final class DataStore: ObservableObject {
@@ -33,6 +34,7 @@ final class DataStore: ObservableObject {
         }
         
         fetchAll()
+        refreshWidget()
     }
     
     private func seedDummyData(context: NSManagedObjectContext) {
@@ -198,6 +200,7 @@ final class DataStore: ObservableObject {
                 entity.completedLessons = Int32(completed)
                 stack.save()
                 fetchProgress()
+                refreshWidget()
             }
         } catch {
             print("Update progress error: \(error)")
@@ -326,6 +329,17 @@ final class DataStore: ObservableObject {
             let count = lessons.filter { $0.category == cat && $0.isCompleted }.count
             return (category: cat, count: count)
         }.sorted { $0.count > $1.count }
+    }
+    
+    // MARK: - Widget Data Sharing
+    
+    func refreshWidget() {
+        let defaults = UserDefaults(suiteName: "group.com.microskill.app") ?? UserDefaults.standard
+        defaults.set(progress.streak, forKey: "widgetStreak")
+        defaults.set(completedLessonsCount, forKey: "widgetCompletedLessons")
+        defaults.set(totalLessonsCount, forKey: "widgetTotalLessons")
+        defaults.set(firstIncompleteLesson()?.title ?? "All Done!", forKey: "widgetNextLessonTitle")
+        WidgetCenter.shared.reloadTimelines(ofKind: "MicroSkillWidget")
     }
 }
 

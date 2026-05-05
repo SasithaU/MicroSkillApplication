@@ -39,6 +39,14 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             UserDefaults.standard.set(newValue?.longitude, forKey: "uniLongitude")
         }
     }
+
+    var hasHomeLocation: Bool {
+        homeCoordinate != nil
+    }
+
+    var hasUniversityLocation: Bool {
+        universityCoordinate != nil
+    }
     
     private override init() {
         super.init()
@@ -69,13 +77,33 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func setHomeLocation() {
         guard let location = currentLocation else { return }
         homeCoordinate = location.coordinate
+        refreshDetectedContext()
     }
     
     func setUniversityLocation() {
         guard let location = currentLocation else { return }
         universityCoordinate = location.coordinate
+        refreshDetectedContext()
     }
-    
+
+    func clearHomeLocation() {
+        homeCoordinate = nil
+        refreshDetectedContext()
+    }
+
+    func clearUniversityLocation() {
+        universityCoordinate = nil
+        refreshDetectedContext()
+    }
+
+    private func refreshDetectedContext() {
+        let newContext = detectContext()
+        if newContext != detectedContext {
+            detectedContext = newContext
+        }
+        objectWillChange.send()
+    }
+
     func detectContext() -> String {
         guard let location = currentLocation else { return "unknown" }
         

@@ -75,12 +75,26 @@ struct SettingsView: View {
                     }
                 
                 if locationManager.canUseLocation && locationEnabled {
-                    Button("Set Home Location") {
+                    Button(locationManager.hasHomeLocation ? "Update Home Location" : "Set Home Location") {
                         locationManager.setHomeLocation()
                     }
                     
-                    Button("Set University Location") {
+                    if locationManager.hasHomeLocation {
+                        Button("Clear Home Location") {
+                            locationManager.clearHomeLocation()
+                        }
+                        .tint(.red)
+                    }
+                    
+                    Button(locationManager.hasUniversityLocation ? "Update University Location" : "Set University Location") {
                         locationManager.setUniversityLocation()
+                    }
+                    
+                    if locationManager.hasUniversityLocation {
+                        Button("Clear University Location") {
+                            locationManager.clearUniversityLocation()
+                        }
+                        .tint(.red)
                     }
                     
                     if locationManager.detectedContext != "unknown" {

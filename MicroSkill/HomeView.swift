@@ -257,7 +257,7 @@ struct HomeView: View {
                             }
                         }
                         
-                        // Continue Learning
+                        // Continue Learning or Browse Lessons
                         if let lesson = nextLesson {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Continue Learning")
@@ -309,6 +309,57 @@ struct HomeView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Continue learning: \(lesson.title) in \(lesson.category). Resume lesson.")
+                            }
+                        } else {
+                            // Show Browse Lessons when all lessons are completed
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("All Lessons Completed! 🎉")
+                                    .font(Theme.headline())
+                                
+                                NavigationLink(destination: CategoriesView()) {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Image(systemName: "book.fill")
+                                                .font(.title3)
+                                                .foregroundStyle(Theme.primary)
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Browse All Lessons")
+                                                    .font(.headline)
+                                                    .foregroundColor(.primary)
+                                                
+                                                Text("Review completed lessons or explore new topics")
+                                                    .font(Theme.body())
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(2)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: "chevron.right")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "arrow.right.circle.fill")
+                                                .foregroundStyle(Theme.heroGradient)
+                                            Text("Explore")
+                                                .font(Theme.caption())
+                                                .foregroundStyle(Theme.primary)
+                                        }
+                                        .padding(.top, 4)
+                                    }
+                                    .padding()
+                                    .background(Theme.cardBackground)
+                                    .cornerRadius(Theme.cardCornerRadius)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                            .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Browse all lessons. Review completed lessons or explore new topics.")
                             }
                         }
                         

@@ -4,41 +4,36 @@ struct CategoriesView: View {
     let categories = ["Tech", "Productivity", "General Knowledge"]
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Theme.background.ignoresSafeArea()
+        ZStack {
+            Theme.background.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: Theme.spacing) {
-                        Text("Browse Topics")
-                            .font(Theme.largeTitle())
-                            .foregroundStyle(Theme.primary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 8)
+            ScrollView {
+                VStack(spacing: Theme.spacing) {
+                    Text("Browse Topics")
+                        .font(Theme.largeTitle())
+                        .foregroundStyle(Theme.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 8)
 
-                        ForEach(categories, id: \.self) { category in
-                            NavigationLink(value: category) {
-                                CategoryCard(
-                                    category: category,
-                                    icon: categoryIcon(for: category),
-                                    color: categoryColor(for: category)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("\(category) category. \(DummyData.lessons.filter { $0.category == category }.count) lessons available")
+                    ForEach(categories, id: \.self) { category in
+                        NavigationLink(destination: LessonListView(category: category)) {
+                            CategoryCard(
+                                category: category,
+                                icon: categoryIcon(for: category),
+                                color: categoryColor(for: category)
+                            )
                         }
-
-                        Spacer(minLength: 40)
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(category) category. \(DummyData.lessons.filter { $0.category == category }.count) lessons available")
                     }
-                    .padding(.horizontal, Theme.padding)
+
+                    Spacer(minLength: 40)
                 }
-            }
-            .navigationTitle("Categories")
-            .navigationBarTitleDisplayMode(.large)
-            .navigationDestination(for: String.self) { category in
-                LessonListView(category: category)
+                .padding(.horizontal, Theme.padding)
             }
         }
+        .navigationTitle("Categories")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     func categoryIcon(for category: String) -> String {

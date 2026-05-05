@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct CategoriesView: View {
+    @EnvironmentObject private var store: DataStore
     let categories = ["Tech", "Productivity", "General Knowledge"]
 
     var body: some View {
@@ -20,11 +21,12 @@ struct CategoriesView: View {
                             CategoryCard(
                                 category: category,
                                 icon: categoryIcon(for: category),
-                                color: categoryColor(for: category)
+                                color: categoryColor(for: category),
+                                lessonCount: store.lessons.filter { $0.category == category }.count
                             )
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("\(category) category. \(DummyData.lessons.filter { $0.category == category }.count) lessons available")
+                        .accessibilityLabel("\(category) category. \(store.lessons.filter { $0.category == category }.count) lessons available")
                     }
 
                     Spacer(minLength: 40)
@@ -59,10 +61,7 @@ struct CategoryCard: View {
     let category: String
     let icon: String
     let color: Color
-
-    private var lessonCount: Int {
-        DummyData.lessons.filter { $0.category == category }.count
-    }
+    let lessonCount: Int
 
     var body: some View {
         HStack(spacing: 16) {

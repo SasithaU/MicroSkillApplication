@@ -93,7 +93,7 @@ struct LessonNodeView: View {
     @EnvironmentObject var store: DataStore
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(alignment: .top, spacing: 16) {
             // Timeline column
             VStack(spacing: 0) {
                 // Node circle

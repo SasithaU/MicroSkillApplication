@@ -208,17 +208,22 @@ final class DataStore: ObservableObject {
     }
     
     func isLessonUnlocked(_ lesson: Lesson) -> Bool {
+        let sorted = lessons.sorted(by: { $0.order < $1.order })
+
         // First lesson is always unlocked
-        if let first = lessons.first, first.id == lesson.id {
+        if let first = sorted.first, first.id == lesson.id {
             return true
         }
-        // A lesson is unlocked if the previous one is completed
-        guard let currentIndex = lessons.firstIndex(where: { $0.id == lesson.id }) else {
+
+        // Unlock if the immediately previous lesson (by order) is completed
+        guard let currentIndex = sorted.firstIndex(where: { $0.id == lesson.id }) else {
             return false
         }
-        let previousIndex = lessons.index(before: currentIndex)
-        return lessons[previousIndex].isCompleted
+        guard currentIndex > 0 else { return false }
+
+        return sorted[currentIndex - 1].isCompleted
     }
+
     
     // MARK: - Mutations
     

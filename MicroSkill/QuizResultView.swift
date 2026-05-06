@@ -48,7 +48,7 @@ struct QuizResultView: View {
             VStack(spacing: 12) {
                 if isCorrect {
                     if let next = store.nextLesson(after: lesson) {
-                        NavigationLink(value: next) {
+                        NavigationLink(destination: LessonDetailView(lesson: next)) {
                             HStack(spacing: 10) {
                                 Text("Next Lesson")
                                     .font(Theme.headline())
@@ -104,9 +104,6 @@ struct QuizResultView: View {
         .background(Theme.background.ignoresSafeArea())
         .navigationTitle("Result")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: Lesson.self) { nextLesson in
-            LessonDetailView(lesson: nextLesson)
-        }
         .onAppear {
             if isCorrect && !didMarkComplete && !lesson.isCompleted {
                 store.markLessonCompleted(lesson)

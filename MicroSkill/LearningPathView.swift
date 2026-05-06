@@ -9,22 +9,23 @@ struct LearningPathView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.spacing * 1.5) {
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Your Learning Path")
-                        .font(Theme.title())
-                        .foregroundColor(.primary)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: Theme.spacing * 1.5) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your Learning Path")
+                            .font(Theme.title())
+                            .foregroundColor(.primary)
+                        
+                        Text("Complete lessons sequentially to unlock the next.")
+                            .font(Theme.body())
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Text("Complete lessons sequentially to unlock the next.")
-                        .font(Theme.body())
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Overall Progress
-                VStack(alignment: .leading, spacing: 10) {
+                    // Overall Progress
+                    VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("Overall Progress")
                             .font(Theme.headline())
@@ -71,9 +72,13 @@ struct LearningPathView: View {
             .padding(.horizontal, Theme.padding)
             .padding(.top, 8)
         }
-        .background(Theme.background.ignoresSafeArea())
-        .navigationTitle("Learning Path")
-        .navigationBarTitleDisplayMode(.large)
+            .background(Theme.background.ignoresSafeArea())
+            .navigationTitle("Learning Path")
+            .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(for: Lesson.self) { selectedLesson in
+                LessonDetailView(lesson: selectedLesson)
+            }
+        }
     }
 }
 
@@ -129,9 +134,6 @@ struct LessonNodeView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .navigationDestination(for: Lesson.self) { selectedLesson in
-            LessonDetailView(lesson: selectedLesson)
-        }
     }
     
     private var lessonCard: some View {

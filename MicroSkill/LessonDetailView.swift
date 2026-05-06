@@ -159,7 +159,7 @@ struct LessonDetailView: View {
                     } else {
                         // Next lesson navigation
                         if let next = store.nextLesson(after: lesson) {
-                            NavigationLink(value: next) {
+                            NavigationLink(destination: LessonDetailView(lesson: next)) {
                                 HStack(spacing: 10) {
                                     Text("Next: \(next.title)")
                                         .font(Theme.headline())
@@ -203,9 +203,6 @@ struct LessonDetailView: View {
             if let quiz = quiz {
                 QuizView(quiz: quiz, lesson: lesson)
             }
-        }
-        .navigationDestination(for: Lesson.self) { nextLesson in
-            LessonDetailView(lesson: nextLesson)
         }
     }
     

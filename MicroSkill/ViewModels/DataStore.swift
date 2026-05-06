@@ -27,22 +27,28 @@ final class DataStore: ObservableObject {
         // Check if data already exists and if model version matches
         let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
         let existing = (try? context.count(for: request)) ?? 0
+        let expectedCount = DummyData.lessons.count
         
-        // Check if we need to reset (model changed - difficulty field added)
-        let needsReset = existing > 0 && !storeHasDifficultyField()
+        // Check if we need to reset because the store is empty,
+        // has an unexpected lesson count, or the schema changed
+        let needsReset = existing == 0 || existing != expectedCount || !storeHasDifficultyField()
         
         if needsReset {
             resetAllData()
         }
         
-        if existing == 0 || needsReset {
+        if needsReset {
             // Seed with dummy data
             seedDummyData(context: context)
+            stack.save()
         }
         
         fetchAll()
         updateProgress()
         refreshWidget()
+        
+        // Verify data loaded
+        print("[DataStore] Loaded \(lessons.count) lessons, \(quizzes.count) quizzes")
     }
     
     private func storeHasDifficultyField() -> Bool {
@@ -75,6 +81,8 @@ final class DataStore: ObservableObject {
         let calendar = Calendar.current
         let now = Date()
         
+        print("[DataStore] Seeding \(DummyData.lessons.count) lessons and \(DummyData.quizzes.count) quizzes")
+        
         for (index, lesson) in DummyData.lessons.enumerated() {
             let entity = LessonEntity(context: context)
             entity.id = lesson.id
@@ -105,7 +113,7 @@ final class DataStore: ObservableObject {
             entity.correctAnswerIndex = Int32(quiz.correctAnswerIndex)
         }
         
-        stack.save()
+        print("[DataStore] Seeding complete")
     }
     
     private func fetchAll() {
@@ -133,8 +141,9 @@ final class DataStore: ObservableObject {
                         difficulty: $0.difficulty
                     )
             }
+            print("[DataStore] Fetched \(lessons.count) lessons")
         } catch {
-            print("Fetch lessons error: \(error)")
+            print("[DataStore] Fetch lessons error: \(error)")
         }
     }
     

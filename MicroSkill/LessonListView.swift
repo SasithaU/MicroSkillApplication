@@ -9,18 +9,52 @@ struct LessonListView: View {
     }
     
     var body: some View {
-        List(filteredLessons) { lesson in
-            let unlocked = store.isLessonUnlocked(lesson)
-            
-            if unlocked {
-                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
-                    lessonRow(lesson: lesson, unlocked: true)
+        if filteredLessons.isEmpty {
+            // Show empty state
+            List {
+                VStack(spacing: 16) {
+                    Spacer(minLength: 40)
+                    
+                    Image(systemName: "book.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No Lessons Available")
+                        .font(Theme.headline())
+                        .foregroundColor(.primary)
+                    
+                    Text("There are no lessons in the \(category) category yet, or all lessons have been completed.")
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Total lessons loaded: \(store.lessons.count)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer(minLength: 40)
                 }
-            } else {
-                lessonRow(lesson: lesson, unlocked: false)
+                .frame(maxWidth: .infinity)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
+            .listStyle(.plain)
+            .navigationTitle(category)
+        } else {
+            List(filteredLessons) { lesson in
+                let unlocked = store.isLessonUnlocked(lesson)
+                
+                if unlocked {
+                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                        lessonRow(lesson: lesson, unlocked: true)
+                    }
+                } else {
+                    lessonRow(lesson: lesson, unlocked: false)
+                }
+            }
+            .navigationTitle(category)
         }
-        .navigationTitle(category)
     }
     
     private func lessonRow(lesson: Lesson, unlocked: Bool) -> some View {

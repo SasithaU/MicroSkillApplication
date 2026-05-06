@@ -96,7 +96,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		40000001 = {
+		40000001 /* MicroSkill */ = {
 			isa = PBXGroup;
 			children = (
 				10000001 /* MicroSkillApp.swift */,
@@ -107,15 +107,15 @@
 				10000006 /* DataModels.swift */,
 				10000007 /* MainTabView.swift */,
 				10000008 /* CategoriesView.swift */,
-				10000009 /* LessonListView.swift */,
 				1000000A /* ProgressDashboardView.swift */,
+				1000000F /* CoreDataStack.swift */,
 				1000000B /* SavedView.swift */,
 				1000000C /* ProfileView.swift */,
 				1000000D /* DummyData.swift */,
-				1000000E /* Theme.swift */,
-				1000000F /* CoreDataStack.swift */,
 				10000010 /* DataStore.swift */,
 				10000011 /* LessonDetailView.swift */,
+				1000000E /* Theme.swift */,
+				10000009 /* LessonListView.swift */,
 				10000012 /* QuizView.swift */,
 				10000013 /* LearningPathView.swift */,
 				10000014 /* QuizResultView.swift */,
@@ -152,7 +152,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		50000001 /* Project */ = {
+		50000001 = {
 			isa = PBXGroup;
 			children = (
 				40000001 /* MicroSkill */,
@@ -197,7 +197,7 @@
 				en,
 				Base,
 			);
-			mainGroup = 50000001 /* Project */;
+			mainGroup = 50000001;
 			productRefGroup = 40000002 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -346,4 +346,3 @@
 	};
 	rootObject = 90000001 /* Project object */;
 }
-

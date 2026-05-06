@@ -5,37 +5,39 @@ struct CategoriesView: View {
     let categories = ["Tech", "Productivity", "General Knowledge"]
 
     var body: some View {
-        ZStack {
-            Theme.background.ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                Theme.background.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: Theme.spacing) {
-                    Text("Browse Topics")
-                        .font(Theme.largeTitle())
-                        .foregroundStyle(Theme.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 8)
+                ScrollView {
+                    VStack(spacing: Theme.spacing) {
+                        Text("Browse Topics")
+                            .font(Theme.largeTitle())
+                            .foregroundStyle(Theme.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 8)
 
-                    ForEach(categories, id: \.self) { category in
-                        NavigationLink(destination: LessonListView(category: category)) {
-                            CategoryCard(
-                                category: category,
-                                icon: categoryIcon(for: category),
-                                color: categoryColor(for: category),
-                                lessonCount: store.lessons.filter { $0.category == category }.count
-                            )
+                        ForEach(categories, id: \.self) { category in
+                            NavigationLink(destination: LessonListView(category: category)) {
+                                CategoryCard(
+                                    category: category,
+                                    icon: categoryIcon(for: category),
+                                    color: categoryColor(for: category),
+                                    lessonCount: store.lessons.filter { $0.category == category }.count
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(category) category. \(store.lessons.filter { $0.category == category }.count) lessons available")
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(category) category. \(store.lessons.filter { $0.category == category }.count) lessons available")
-                    }
 
-                    Spacer(minLength: 40)
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal, Theme.padding)
                 }
-                .padding(.horizontal, Theme.padding)
             }
+            .navigationTitle("Categories")
+            .navigationBarTitleDisplayMode(.large)
         }
-        .navigationTitle("Categories")
-        .navigationBarTitleDisplayMode(.large)
     }
 
     func categoryIcon(for category: String) -> String {

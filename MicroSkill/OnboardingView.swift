@@ -9,15 +9,15 @@ struct OnboardingView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.background.ignoresSafeArea()
+                PremiumBackground()
                 
                 ScrollView {
-                    VStack(spacing: Theme.spacing * 2) {
+                    VStack(spacing: Theme.spacing * 2.5) {
                         heroSection
                         nameInputSection
                         goalSelectionSection
                         
-                        Spacer(minLength: 20)
+                        Spacer(minLength: 40)
                         
                         continueButton
                     }
@@ -62,18 +62,18 @@ struct OnboardingView: View {
     }
     
     private var nameInputSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("What should we call you?")
                 .font(Theme.headline())
                 .foregroundColor(.primary)
             
             TextField("Enter your name", text: $userName)
                 .font(Theme.body())
-                .padding()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
+                .padding(18)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                        .stroke(Theme.separator, lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Theme.primary.opacity(0.1), lineWidth: 1)
                 )
         }
     }
@@ -108,22 +108,15 @@ struct OnboardingView: View {
                 hasCompletedOnboarding = true
             }
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Text("Start Personalized Path")
-                    .font(Theme.headline())
                 Image(systemName: "arrow.right.circle.fill")
-                    .font(.title3)
+                    .font(.title2)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                    .fill(Theme.primary)
-            )
-            .foregroundColor(.white)
         }
+        .buttonStyle(PrimaryButtonStyle())
         .disabled(userName.isEmpty || selectedGoal.isEmpty)
-        .opacity(userName.isEmpty || selectedGoal.isEmpty ? 0.45 : 1.0)
+        .opacity(userName.isEmpty || selectedGoal.isEmpty ? 0.6 : 1.0)
     }
 }
 

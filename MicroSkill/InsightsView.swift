@@ -4,192 +4,134 @@ struct InsightsView: View {
     @EnvironmentObject var store: DataStore
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.spacing) {
-                Text("Learning Insights")
-                    .font(Theme.title())
+        ZStack {
+            PremiumBackground()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Personal Insights")
+                            .font(Theme.largeTitle())
+                        Text("Data-driven analytics to optimize your learning")
+                            .font(Theme.body())
+                            .foregroundColor(.secondary)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Text("Personalized analytics based on your study patterns.")
-                    .font(Theme.body())
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Insight Cards Grid
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacing) {
-                    InsightCard(
-                        icon: "clock.fill",
-                        iconColor: Theme.accent,
-                        title: "Best Time",
-                        value: store.bestLearningTime(),
-                        subtitle: "Most productive hour"
-                    )
+                    .padding(.top, 20)
                     
-                    InsightCard(
-                        icon: "calendar.circle.fill",
-                        iconColor: Theme.primary,
-                        title: "Most Active Day",
-                        value: store.mostActiveDay(),
-                        subtitle: "You learn most here"
-                    )
-                    
-                    InsightCard(
-                        icon: "flame.fill",
-                        iconColor: Color.orange,
-                        title: "Study Streak",
-                        value: "\(store.progress.streak) days",
-                        subtitle: "Keep it going!"
-                    )
-                    
-                    InsightCard(
-                        icon: "hourglass",
-                        iconColor: Theme.success,
-                        title: "Study Time",
-                        value: "\(store.totalStudyTimeMinutes()) min",
-                        subtitle: "Total time invested"
-                    )
-                    
-                    // NEW: Optimal Time Prediction from LearningModel
-                    InsightCard(
-                        icon: "brain.head.profile",
-                        iconColor: Theme.primary,
-                        title: "Optimal Time",
-                        value: LearningModel.shared.optimalTimeDescription(),
-                        subtitle: "Personalized best time"
-                    )
-                    
-                    InsightCard(
-                        icon: "cpu.fill",
-                        iconColor: CoreMLLearningPredictor.shared.isModelAvailable ? Theme.success : Theme.accent,
-                        title: "Personalization",
-                        value: CoreMLLearningPredictor.shared.isModelAvailable ? "Core ML" : "Adaptive",
-                        subtitle: CoreMLLearningPredictor.shared.isModelAvailable ? "On-device model" : "Rule-based fallback"
-                    )
-                    
-                    // NEW: Consistency Score
-                    let consistency = LearningModel.shared.consistencyScore()
-                    InsightCard(
-                        icon: "chart.pie.fill",
-                        iconColor: consistency > 0.5 ? Theme.success : Theme.accent,
-                        title: "Consistency",
-                        value: "\(Int(consistency * 100))%",
-                        subtitle: consistency > 0.5 ? "Great habits!" : "Keep building"
-                    )
-                }
-                
-                // NEW: Readiness for Advanced
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "graduationcap.fill")
-                            .foregroundColor(Theme.primary)
-                            .font(.title2)
+                    // Stats Grid
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        InsightCard(
+                            icon: "clock.fill",
+                            iconColor: Theme.accent,
+                            title: "Peak Hour",
+                            value: store.bestLearningTime(),
+                            subtitle: "Most active time"
+                        )
+                        .accessibilityLabel("Peak learning hour: \(store.bestLearningTime())")
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        InsightCard(
+                            icon: "calendar.badge.clock",
+                            iconColor: Theme.primary,
+                            title: "Best Day",
+                            value: store.mostActiveDay(),
+                            subtitle: "Peak performance"
+                        )
+                        .accessibilityLabel("Most active day: \(store.mostActiveDay())")
+                        
+                        InsightCard(
+                            icon: "brain.head.profile",
+                            iconColor: Theme.secondaryAccent,
+                            title: "Optimal Time",
+                            value: LearningModel.shared.optimalTimeDescription(),
+                            subtitle: "AI Recommendation"
+                        )
+                        .accessibilityLabel("Optimal learning time: \(LearningModel.shared.optimalTimeDescription())")
+                        
+                        InsightCard(
+                            icon: "chart.line.uptrend.xyaxis",
+                            iconColor: Theme.success,
+                            title: "Consistency",
+                            value: "\(Int(LearningModel.shared.consistencyScore() * 100))%",
+                            subtitle: "Study habit score"
+                        )
+                        .accessibilityLabel("Consistency score: \(Int(LearningModel.shared.consistencyScore() * 100))%")
+                    }
+                    
+                    // Readiness Section
+                    HStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.primary.opacity(0.1))
+                                .frame(width: 50, height: 50)
+                            Image(systemName: LearningModel.shared.isReadyForAdvanced() ? "checkmark.seal.fill" : "lock.fill")
+                                .foregroundStyle(Theme.primary)
+                                .font(.title3)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Advanced Readiness")
                                 .font(Theme.headline())
-                            Text(LearningModel.shared.isReadyForAdvanced() ? "You're ready for advanced lessons!" : "Complete more lessons to unlock advanced content")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: LearningModel.shared.isReadyForAdvanced() ? "checkmark.seal.fill" : "lock.fill")
-                            .font(.title2)
-                            .foregroundColor(LearningModel.shared.isReadyForAdvanced() ? Theme.success : .secondary)
-                    }
-                }
-                .cardStyle()
-                
-                // NEW: Peak Performance Category
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "trophy.fill")
-                            .foregroundColor(Color.yellow)
-                            .font(.title2)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Peak Performance")
-                                .font(Theme.headline())
-                            Text("Your strongest category: \(LearningModel.shared.peakPerformanceCategory())")
+                            Text(LearningModel.shared.isReadyForAdvanced() ? "You're ready for advanced content!" : "Master more lessons to unlock")
                                 .font(Theme.caption())
                                 .foregroundColor(.secondary)
                         }
                         
                         Spacer()
                     }
-                }
-                .cardStyle()
-                
-                // Average Card
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .foregroundColor(Theme.primary)
-                            .font(.title2)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Daily Average")
-                                .font(Theme.headline())
-                            Text("Lessons completed per day (last 7 days)")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Text(String(format: "%.1f", store.averageLessonsPerDay()))
-                            .font(Theme.title())
-                            .foregroundColor(Theme.primary)
-                    }
-                }
-                .cardStyle()
-                
-                // Category Breakdown
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Category Breakdown")
-                        .font(Theme.headline())
+                    .padding()
+                    .glassCardStyle()
                     
-                    ForEach(store.categoryBreakdown(), id: \.category) { item in
-                        HStack {
-                            Text(item.category)
-                                .font(Theme.body())
-                            Spacer()
-                            Text("\(item.count)")
-                                .font(Theme.headline())
-                                .foregroundColor(Theme.primary)
-                        }
+                    // Category Performance
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Topic Mastery")
+                            .font(Theme.headline())
                         
-                        GeometryReader { geo in
-                            let total = max(store.completedLessonsCount, 1)
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.secondary.opacity(0.15))
-                                    .frame(height: 8)
+                        ForEach(store.categoryBreakdown(), id: \.category) { item in
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(item.category)
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    Spacer()
+                                    Text("\(item.count) Lessons")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(Theme.primary)
+                                }
                                 
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Theme.primary)
-                                    .frame(width: geo.size.width * CGFloat(item.count) / CGFloat(total), height: 8)
-                                    .animation(.easeInOut(duration: 0.5), value: item.count)
+                                GeometryReader { geo in
+                                    let total = max(store.completedLessonsCount, 1)
+                                    ZStack(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.primary.opacity(0.05))
+                                            .frame(height: 10)
+                                        
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Theme.heroGradient)
+                                            .frame(width: geo.size.width * CGFloat(item.count) / CGFloat(total), height: 10)
+                                    }
+                                }
+                                .frame(height: 10)
+                                .accessibilityLabel("\(item.category) mastery progress: \(item.count) lessons completed")
                             }
                         }
-                        .frame(height: 8)
                     }
+                    .padding(24)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+                    
+                    Spacer(minLength: 40)
                 }
-                .cardStyle()
-                
-                Spacer(minLength: 40)
+                .padding(.horizontal, Theme.padding)
             }
-            .padding(.horizontal, Theme.padding)
-            .padding(.top, 8)
         }
-        .background(Theme.background.ignoresSafeArea())
-        .navigationTitle("Insights")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-// MARK: - Insight Card
 
 struct InsightCard: View {
     let icon: String
@@ -199,24 +141,36 @@ struct InsightCard: View {
     let subtitle: String
     
     var body: some View {
-        VStack(spacing: 10) {
-            IconTile(systemName: icon, color: iconColor)
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .foregroundStyle(iconColor)
+                    .font(.system(size: 14, weight: .bold))
+            }
             
-            Text(value)
-                .font(Theme.headline())
-                .multilineTextAlignment(.center)
-            
-            Text(title)
-                .font(Theme.caption())
-                .foregroundColor(.secondary)
-            
-            Text(subtitle)
-                .font(.system(size: 11))
-                .foregroundColor(.secondary.opacity(0.8))
-                .multilineTextAlignment(.center)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                
+                Text(title)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.secondary)
+                    .textCase(.uppercase)
+            }
         }
-        .frame(maxWidth: .infinity, minHeight: 140)
-        .cardStyle()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+        )
+        .premiumShadow()
     }
 }
 

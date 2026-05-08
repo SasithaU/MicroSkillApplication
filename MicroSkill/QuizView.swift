@@ -15,26 +15,29 @@ struct QuizView: View {
     
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            PremiumBackground()
             
             ScrollView {
-                VStack(spacing: Theme.spacing * 1.5) {
+                VStack(spacing: 28) {
                     // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Quiz")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Question")
                             .font(Theme.caption())
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
+                            .foregroundColor(Theme.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Theme.primary.opacity(0.1))
+                            .clipShape(Capsule())
                         
                         Text(quiz.question)
-                            .font(Theme.headline())
+                            .font(Theme.title())
                             .foregroundColor(.primary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
+                    .padding(.top, 20)
                     
                     // Options
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         ForEach(Array(quiz.options.enumerated()), id: \.offset) { index, option in
                         QuizOptionButton(
                                 option: option,
@@ -44,13 +47,11 @@ struct QuizView: View {
                                 correctIndex: quiz.correctAnswerIndex
                             ) {
                                 if resultPayload == nil {
-                                    withAnimation(.spring(response: 0.3)) {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                         selectedIndex = index
                                     }
                                 }
                             }
-                            .accessibilityLabel("Option \(String(Character(UnicodeScalar(65 + index)!))): \(option)")
-                            .accessibilityHint("Double tap to select this answer")
                         }
                     }
                     
@@ -66,27 +67,21 @@ struct QuizView: View {
                             correctAnswer: quiz.options[quiz.correctAnswerIndex]
                         )
                     } label: {
-                        HStack(spacing: 10) {
-                            Text("Submit Answer")
-                                .font(Theme.headline())
+                        HStack {
+                            Text("Check Answer")
+                            Image(systemName: "checkmark.circle.fill")
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(selectedIndex == nil ? Color.secondary.opacity(0.2) : Theme.primary)
-                        .foregroundColor(selectedIndex == nil ? .secondary : .white)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PrimaryButtonStyle())
                     .disabled(selectedIndex == nil)
-                    .accessibilityLabel("Submit answer")
-                    .accessibilityHint(selectedIndex == nil ? "Select an answer first" : "Double tap to submit your answer")
+                    .opacity(selectedIndex == nil ? 0.6 : 1.0)
                     
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)
             }
         }
-        .navigationTitle("Quiz")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .id(quiz.id)
         .onAppear {
@@ -136,11 +131,11 @@ struct QuizOptionButton: View {
                         .fill(state == .correct ? Theme.success.opacity(0.15) :
                               state == .wrong ? Color.red.opacity(0.15) :
                               state == .selected ? Theme.primary.opacity(0.15) :
-                              Color.secondary.opacity(0.1))
-                        .frame(width: 36, height: 36)
+                              Color.primary.opacity(0.05))
+                        .frame(width: 40, height: 40)
                     
                     Text("\(String(Character(UnicodeScalar(65 + index)!)))")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundColor(state == .correct ? Theme.success :
                                         state == .wrong ? .red :
                                         state == .selected ? Theme.primary : .secondary)
@@ -153,32 +148,27 @@ struct QuizOptionButton: View {
                 
                 Spacer()
                 
-                if state == .selected {
+                if state == .selected || state == .correct {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.primary)
-                } else if state == .correct {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.success)
+                        .foregroundStyle(state == .correct ? Theme.success : Theme.primary)
+                        .font(.title3)
                 } else if state == .wrong {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Color.red)
+                        .font(.title3)
                 }
             }
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                    .fill(state == .selected ? Theme.primary.opacity(0.08) :
-                          state == .correct ? Theme.success.opacity(0.08) :
-                          state == .wrong ? Color.red.opacity(0.08) :
-                          Theme.cardBackground)
-            )
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                    .stroke(state == .selected ? Theme.primary.opacity(0.3) :
-                            state == .correct ? Theme.success.opacity(0.4) :
-                            state == .wrong ? Color.red.opacity(0.4) :
-                            Theme.separator, lineWidth: 1.0)
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(state == .selected ? Theme.primary :
+                            state == .correct ? Theme.success :
+                            state == .wrong ? Color.red :
+                            Color.white.opacity(0.2), lineWidth: 1.5)
             )
+            .premiumShadow()
         }
         .buttonStyle(.plain)
         .disabled(showResult)

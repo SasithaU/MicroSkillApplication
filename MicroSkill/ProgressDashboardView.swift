@@ -12,176 +12,166 @@ struct ProgressDashboardView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        ZStack {
+            PremiumBackground()
+            
             ScrollView {
-                VStack(spacing: Theme.spacing) {
-                    // Header Stats
-                    HStack(spacing: Theme.spacing) {
+                VStack(spacing: 24) {
+                    // Header Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Performance")
+                            .font(Theme.largeTitle())
+                        Text("Track your learning achievements")
+                            .font(Theme.body())
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 20)
+                    
+                    // Header Stats Grid
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                         StatCard(
                             value: "\(store.completedLessonsCount)",
                             label: "Completed",
                             icon: "checkmark.circle.fill",
                             color: Theme.success
                         )
+                        .accessibilityLabel("\(store.completedLessonsCount) lessons completed")
                         
                         StatCard(
                             value: "\(store.progress.streak)",
                             label: "Day Streak",
                             icon: "flame.fill",
-                            color: Color.orange
+                            color: .orange
                         )
+                        .accessibilityLabel("\(store.progress.streak) day streak")
+                        
+                        StatCard(
+                            value: "\(store.progress.totalPoints)",
+                            label: "Total Points",
+                            icon: "sparkles",
+                            color: .yellow
+                        )
+                        .accessibilityLabel("\(store.progress.totalPoints) mastery points")
+                        
+                        StatCard(
+                            value: "\(Int(Double(store.completedLessonsCount) / Double(max(store.totalLessonsCount, 1)) * 100))%",
+                            label: "Global Progress",
+                            icon: "chart.pie.fill",
+                            color: Theme.primary
+                        )
+                        .accessibilityLabel("Global progress: \(Int(Double(store.completedLessonsCount) / Double(max(store.totalLessonsCount, 1)) * 100))%")
                     }
                     
-                    // Weekly Chart
-                    VStack(alignment: .leading, spacing: 12) {
+                    // Weekly Activity Chart
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("Last 7 Days")
+                            Text("Weekly Activity")
                                 .font(Theme.headline())
                             Spacer()
-                            Text("\(dailyData.reduce(0) { $0 + $1.count }) lessons")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
+                            HStack(spacing: 4) {
+                                Circle().fill(Theme.primary).frame(width: 8, height: 8)
+                                Text("Lessons")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         
                         if dailyData.allSatisfy({ $0.count == 0 }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "chart.bar")
+                            VStack(spacing: 12) {
+                                Image(systemName: "chart.bar.xaxis")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.secondary.opacity(0.4))
-                                Text("Complete lessons to see your progress chart")
-                                    .font(Theme.body())
+                                    .foregroundColor(.secondary.opacity(0.3))
+                                Text("No activity recorded yet")
+                                    .font(Theme.caption())
                                     .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
                             }
                             .frame(maxWidth: .infinity, minHeight: 180)
-                            .background(Color.secondary.opacity(0.05))
-                            .cornerRadius(Theme.cardCornerRadius)
+                            .background(Color.primary.opacity(0.03))
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
                         } else {
                             Chart(dailyData) { day in
                                 BarMark(
                                     x: .value("Day", day.weekday),
                                     y: .value("Lessons", day.count)
                                 )
-                                .foregroundStyle(day.count > 0 ? Theme.primary : Color.secondary.opacity(0.3))
-                                .cornerRadius(6)
-                                .annotation(position: .top) {
-                                    if day.count > 0 {
-                                        Text("\(day.count)")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .foregroundColor(Theme.primary)
-                                    }
-                                }
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Theme.primary, Theme.primary.opacity(0.6)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .cornerRadius(8)
                             }
-                            .chartYAxis {
-                                AxisMarks(position: .leading, values: .stride(by: 1)) { value in
-                                    AxisGridLine()
-                                    AxisValueLabel {
-                                        if let intValue = value.as(Int.self) {
-                                            Text("\(intValue)")
-                                                .font(.system(size: 10))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                            }
+                            .frame(height: 200)
+                            .chartYAxis(.hidden)
                             .chartXAxis {
                                 AxisMarks { value in
                                     AxisValueLabel {
                                         if let strValue = value.as(String.self) {
                                             Text(strValue.prefix(1))
-                                                .font(.system(size: 12, weight: .medium))
+                                                .font(.system(size: 12, weight: .bold))
                                                 .foregroundColor(.secondary)
                                         }
                                     }
                                 }
                             }
-                            .frame(height: 200)
-                            .padding(.vertical, 8)
+                            .accessibilityLabel("Weekly activity chart showing lessons completed each day")
                         }
                     }
-                    .cardStyle()
+                    .padding(20)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .premiumShadow()
                     
-                    // Overall Progress Ring
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Overall Progress")
-                            .font(Theme.headline())
-                        
-                        HStack(spacing: 20) {
+                    // Detailed Insights Link
+                    NavigationLink(value: "insights") {
+                        HStack(spacing: 16) {
                             ZStack {
                                 Circle()
-                                    .stroke(Color.secondary.opacity(0.15), lineWidth: 12)
-                                    .frame(width: 100, height: 100)
-                                
-                                Circle()
-                                    .trim(from: 0, to: CGFloat(min(store.completedLessonsCount, store.totalLessonsCount)) / CGFloat(max(store.totalLessonsCount, 1)))
-                                    .stroke(Theme.primary, style: StrokeStyle(lineWidth: 12, lineCap: .round))
-                                    .frame(width: 100, height: 100)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.easeInOut(duration: 0.8), value: store.completedLessonsCount)
-                                
-                                VStack(spacing: 2) {
-                                    Text("\(store.completedLessonsCount)/\(store.totalLessonsCount)")
-                                        .font(.system(size: 18, weight: .bold, design: .default))
-                                        .foregroundColor(.primary)
-                                    Text("lessons")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.secondary)
-                                }
+                                    .fill(Theme.accent.opacity(0.1))
+                                    .frame(width: 50, height: 50)
+                                Image(systemName: "lightbulb.min.fill")
+                                    .foregroundStyle(Theme.accent)
+                                    .font(.title3)
                             }
                             
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("\(store.totalLessonsCount - store.completedLessonsCount) lessons remaining")
-                                    .font(Theme.body())
-                                    .foregroundColor(.primary)
-                                
-                                Text("You're doing great! Keep the momentum going.")
-                                    .font(Theme.caption())
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                        }
-                    }
-                    .cardStyle()
-                    
-                    // Navigate to Insights
-                    NavigationLink(destination: InsightsView()) {
-                        HStack {
-                            IconTile(systemName: "lightbulb.fill", color: Theme.accent)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Detailed Insights")
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Learning Insights")
                                     .font(Theme.headline())
                                     .foregroundColor(.primary)
-                                Text("Best time, most active day, and more")
+                                Text("Analyze your habits and patterns")
                                     .font(Theme.caption())
                                     .foregroundColor(.secondary)
                             }
                             
                             Spacer()
                             
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
-                                .font(.caption)
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(Theme.primary.opacity(0.8))
                         }
-                        .cardStyle()
+                        .padding()
+                        .glassCardStyle()
                     }
                     .buttonStyle(.plain)
                     
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)
-                .padding(.top, 8)
             }
-            .background(Theme.background.ignoresSafeArea())
-            .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 // MARK: - Data Model for Chart
-
 struct DailyCompletion: Identifiable {
     let id = UUID()
     let date: Date
@@ -190,7 +180,6 @@ struct DailyCompletion: Identifiable {
 }
 
 // MARK: - Stat Card
-
 struct StatCard: View {
     let value: String
     let label: String
@@ -198,22 +187,43 @@ struct StatCard: View {
     let color: Color
     
     var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Spacer()
-                IconTile(systemName: icon, color: color)
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.1))
+                    .frame(width: 40, height: 40)
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+                    .font(.system(size: 16, weight: .bold))
             }
             
-            Text(value)
-                .font(.system(size: 28, weight: .bold, design: .default))
-                .foregroundColor(.primary)
-            
-            Text(label)
-                .font(Theme.caption())
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                
+                Text(label)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .textCase(.uppercase)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .cardStyle()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+        )
+        .premiumShadow()
+    }
+}
+
+#Preview {
+    NavigationStack {
+        ProgressDashboardView()
+            .environmentObject(DataStore.shared)
     }
 }
 

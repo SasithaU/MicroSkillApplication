@@ -229,6 +229,7 @@ final class DataStore: ObservableObject {
                 progress = UserProgress(
                     completedLessons: Int(entity.completedLessons),
                     streak: Int(entity.streak),
+                    totalPoints: Int(entity.completedLessons) * 100 + Int(entity.streak) * 50,
                     lastAccessedLessonId: entity.lastLessonId
                 )
             } else {
@@ -236,7 +237,7 @@ final class DataStore: ObservableObject {
                 newEntity.completedLessons = 0
                 newEntity.streak = 0
                 stack.save()
-                progress = UserProgress(streak: 0)
+                progress = UserProgress(streak: 0, totalPoints: 0)
             }
         } catch {
             print("Fetch progress error: \(error)")

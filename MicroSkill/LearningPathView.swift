@@ -9,47 +9,56 @@ struct LearningPathView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        ZStack {
+            PremiumBackground()
+            
             ScrollView {
-                VStack(spacing: Theme.spacing * 1.5) {
+                VStack(spacing: Theme.spacing * 2) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Your Learning Path")
-                            .font(Theme.title())
+                            .font(Theme.largeTitle())
                             .foregroundColor(.primary)
                         
-                        Text("Complete lessons sequentially to unlock the next.")
+                        Text("Master micro-skills sequentially to achieve your goals.")
                             .font(Theme.body())
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 20)
                     
-                    // Overall Progress
-                    VStack(alignment: .leading, spacing: 10) {
+                    // Overall Progress Card
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("Overall Progress")
-                                .font(Theme.headline())
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Global Progress")
+                                    .font(Theme.headline())
+                                Text("\(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) Lessons Completed")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
+                            }
                             Spacer()
                             Text("\(Int(overallProgress * 100))%")
-                                .font(Theme.headline())
+                                .font(Theme.title())
                                 .foregroundStyle(Theme.primary)
                         }
                         
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.secondary.opacity(0.15))
-                                    .frame(height: 12)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.secondary.opacity(0.1))
+                                    .frame(height: 14)
                                 
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Theme.primary)
-                                    .frame(width: geo.size.width * overallProgress, height: 12)
-                                    .animation(.snappy(duration: 0.6), value: overallProgress)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Theme.heroGradient)
+                                    .frame(width: geo.size.width * overallProgress, height: 14)
+                                    .shadow(color: Theme.primary.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
                         }
-                        .frame(height: 12)
+                        .frame(height: 14)
+                        .accessibilityLabel("Overall mastery progress: \(Int(overallProgress * 100))%")
                     }
-                    .cardStyle()
+                    .glassCardStyle()
                     
                     // Lesson Nodes
                     VStack(spacing: 0) {
@@ -65,18 +74,17 @@ struct LearningPathView: View {
                             )
                         }
                     }
+                    .padding(.top, 10)
                     
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)
-                .padding(.top, 8)
             }
-            .background(Theme.background.ignoresSafeArea())
-            .navigationTitle("Learning Path")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
-}
+    }
 
 // MARK: - Lesson Node
 
@@ -93,7 +101,7 @@ struct LessonNodeView: View {
             // Timeline column
             VStack(spacing: 0) {
                 if isUnlocked && !lesson.isCompleted {
-                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                    NavigationLink(value: lesson) {
                         nodeCircle
                     }
                     .buttonStyle(.plain)
@@ -113,7 +121,7 @@ struct LessonNodeView: View {
             
             // Card
             if isUnlocked && !lesson.isCompleted {
-                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                NavigationLink(value: lesson) {
                     lessonCard
                 }
                 .buttonStyle(.plain)
@@ -129,17 +137,17 @@ struct LessonNodeView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(lesson.category)
-                        .font(Theme.caption())
+                    Text(lesson.category.uppercased())
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundColor(isUnlocked ? Theme.primary : .secondary)
                         .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
+                        .padding(.vertical, 4)
                         .background(isUnlocked ? Theme.primary.opacity(0.12) : Color.secondary.opacity(0.1))
                         .clipShape(Capsule())
                     
                     Text(lesson.title)
                         .font(Theme.headline())
-                        .foregroundColor(.primary)
+                        .foregroundColor(isUnlocked ? .primary : .secondary)
                     
                     Text(lesson.content)
                         .font(Theme.body())
@@ -150,37 +158,45 @@ struct LessonNodeView: View {
                 Spacer()
                 
                 if lesson.isCompleted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(Theme.success)
-                        .font(.title3)
+                    ZStack {
+                        Circle().fill(Theme.success.opacity(0.1)).frame(width: 32, height: 32)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(Theme.success)
+                            .font(.title3)
+                    }
                 } else if !isUnlocked {
                     Image(systemName: "lock.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.secondary.opacity(0.5))
                         .font(.title3)
                 } else {
                     Image(systemName: "chevron.right")
                         .foregroundColor(Theme.primary)
-                        .font(.caption)
+                        .font(.system(size: 14, weight: .bold))
                 }
             }
             
             if isUnlocked && !lesson.isCompleted {
                 HStack {
                     Spacer()
-                    HStack(spacing: 4) {
-                        Image(systemName: "play.circle.fill")
-                        Text("Proceed to Lesson")
+                    HStack(spacing: 6) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 10))
+                        Text("Start Lesson")
+                            .font(.system(size: 12, weight: .bold))
                     }
-                    .font(Theme.caption().bold())
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Theme.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Theme.heroGradient)
                     .clipShape(Capsule())
+                    .premiumShadow()
                 }
             }
         }
-        .cardStyle()
+        .glassCardStyle()
+        .opacity(isUnlocked ? 1.0 : 0.6)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(lesson.title), \(lesson.category). \(lesson.isCompleted ? "Completed" : (isUnlocked ? "Unlocked" : "Locked"))")
     }
     
     private var nodeCircle: some View {
@@ -194,10 +210,11 @@ struct LessonNodeView: View {
                 .frame(width: 48, height: 48)
             
             nodeIcon
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: isUnlocked ? 18 : 14, weight: .bold))
                 .foregroundColor(nodeIconColor)
         }
         .frame(width: 48, height: 48)
+        .accessibilityHidden(true)
     }
     
     // MARK: - Node Styling
@@ -243,7 +260,7 @@ struct LessonNodeView: View {
     }
     
     private var connectorColor: Color {
-        lesson.isCompleted ? Theme.success : Color.secondary.opacity(0.2)
+        lesson.isCompleted ? Theme.success : (isUnlocked ? Theme.primary.opacity(0.4) : Color.secondary.opacity(0.15))
     }
 }
 

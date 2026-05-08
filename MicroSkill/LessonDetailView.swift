@@ -20,187 +20,150 @@ struct LessonDetailView: View {
     
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            PremiumBackground()
             
             ScrollView {
-                VStack(spacing: Theme.spacing * 1.5) {
-                    // Category Badge + Difficulty
-                    HStack {
-                        Text(effectiveLesson.category)
-                            .font(Theme.caption())
+                VStack(spacing: 28) {
+                    // Header Image/Icon Section
+                    ZStack {
+                        Circle()
+                            .fill(Theme.heroGradient.opacity(0.1))
+                            .frame(width: 140, height: 140)
+                            .blur(radius: 20)
+                        
+                        Image(systemName: "book.pages.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(Theme.heroGradient)
+                            .premiumShadow()
+                    }
+                    .padding(.top, 20)
+                    
+                    // Badges
+                    HStack(spacing: 12) {
+                        Text(effectiveLesson.category.uppercased())
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(Theme.primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Theme.primary.opacity(0.12))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Theme.primary.opacity(0.1))
                             .clipShape(Capsule())
                         
-                        // Difficulty Badge
-                        Text(effectiveLesson.difficulty.capitalized)
-                            .font(Theme.caption())
+                        Text(effectiveLesson.difficulty.uppercased())
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(difficultyColor(effectiveLesson.difficulty))
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(difficultyColor(effectiveLesson.difficulty).opacity(0.12))
+                            .padding(.vertical, 5)
+                            .background(difficultyColor(effectiveLesson.difficulty).opacity(0.1))
                             .clipShape(Capsule())
                         
                         Spacer()
                         
-                        // Bookmark button
                         Button {
                             store.toggleSaveLesson(effectiveLesson)
                         } label: {
                             Image(systemName: effectiveLesson.isSaved ? "bookmark.fill" : "bookmark")
                                 .font(.title3)
                                 .foregroundColor(effectiveLesson.isSaved ? Theme.primary : .secondary)
+                                .padding(10)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
                         }
                         .buttonStyle(.plain)
-                        .padding(.trailing, 8)
-                        .accessibilityLabel(effectiveLesson.isSaved ? "Remove bookmark" : "Bookmark lesson")
-                        
-                        if effectiveLesson.isCompleted {
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.circle.fill")
-                                Text("Completed")
-                            }
-                            .font(Theme.caption())
-                            .foregroundStyle(Theme.success)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Theme.success.opacity(0.12))
-                            .clipShape(Capsule())
-                        }
-                    }
-                    
-                    // Adaptive Path Warning for Advanced Lessons
-                    if effectiveLesson.difficulty == "advanced" && !LearningModel.shared.isReadyForAdvanced() {
-                        HStack(spacing: 10) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(Theme.accent)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Advanced Lesson")
-                                    .font(Theme.caption())
-                                    .foregroundColor(Theme.accent)
-                                    .textCase(.uppercase)
-                                
-                                Text("Complete more beginner lessons to unlock your full potential.")
-                                    .font(Theme.body())
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Theme.accent.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                                .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
-                        )
+                        .accessibilityLabel(effectiveLesson.isSaved ? "Remove from saved" : "Save lesson")
+                        .accessibilityHint("Double tap to toggle bookmark status")
                     }
                     
                     // Title
-                    Text(effectiveLesson.title)
-                        .font(Theme.title())
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    // Content Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Lesson")
-                            .font(Theme.headline())
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(effectiveLesson.title)
+                            .font(Theme.title())
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
                         
-                        Text(effectiveLesson.content)
-                            .font(Theme.body())
-                            .foregroundColor(.secondary)
-                            .lineSpacing(4)
-                    }
-                    .cardStyle()
-                    
-                    // Action Buttons
-                    if !effectiveLesson.isCompleted {
-                        // Mark as Completed is the primary action now
-                        Button {
-                            store.markLessonCompleted(effectiveLesson)
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.title3)
-                                Text("Mark as Completed")
-                                    .font(Theme.headline())
+                        if effectiveLesson.isCompleted {
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.seal.fill")
+                                Text("Lesson Mastered")
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Theme.success.opacity(0.15))
+                            .font(Theme.caption())
                             .foregroundStyle(Theme.success)
-                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Mark \(effectiveLesson.title) as completed")
-                    } else {
-                        // Lesson is completed
-                        if store.allLessonsCompleted(in: effectiveLesson.category) && quiz != nil {
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Content
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(effectiveLesson.content)
+                            .font(.system(size: 18, weight: .regular, design: .rounded))
+                            .foregroundColor(.primary.opacity(0.85))
+                            .lineSpacing(8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(24)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .accessibilityLabel("Lesson content: \(effectiveLesson.content)")
+                    
+                    // Actions
+                    VStack(spacing: 16) {
+                        if !effectiveLesson.isCompleted {
                             Button {
-                                showQuiz = true
+                                store.markLessonCompleted(effectiveLesson)
                             } label: {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "play.circle.fill")
-                                        .font(.title3)
-                                    Text("Start Quiz")
-                                        .font(Theme.headline())
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Mark as Completed")
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Theme.primary)
-                                .foregroundColor(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Start quiz for \(effectiveLesson.title)")
-                            .padding(.bottom, 8)
-                        }
-                        
-                        // Next lesson navigation
-                        if let next = store.nextLesson(after: effectiveLesson) {
-                            NavigationLink(destination: LessonDetailView(lesson: next)) {
-                                HStack(spacing: 10) {
-                                    Text("Next: \(next.title)")
-                                        .font(Theme.headline())
-                                    Spacer()
-                                    Image(systemName: "arrow.right")
-                                        .font(.title3)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Theme.primary.opacity(0.1))
-                                .foregroundStyle(Theme.primary)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Next lesson: \(next.title)")
+                            .buttonStyle(PrimaryButtonStyle())
                         } else {
-                            VStack(spacing: 8) {
-                                Image(systemName: "star.circle.fill")
-                                    .font(.largeTitle)
-                                    .foregroundStyle(Theme.primary)
-                                
-                                Text("All lessons completed!")
-                                    .font(Theme.headline())
-                                    .foregroundColor(.primary)
+                            if store.allLessonsCompleted(in: effectiveLesson.category) && quiz != nil {
+                                Button {
+                                    showQuiz = true
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "play.fill")
+                                        Text("Start Category Quiz")
+                                    }
+                                }
+                                .buttonStyle(PrimaryButtonStyle())
                             }
-                            .frame(maxWidth: .infinity)
-                            .cardStyle()
+                            
+                            if let next = store.nextLesson(after: effectiveLesson) {
+                                NavigationLink(destination: LessonDetailView(lesson: next)) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("NEXT LESSON")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundColor(.secondary)
+                                            Text(next.title)
+                                                .font(Theme.headline())
+                                                .foregroundColor(.primary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.right.circle.fill")
+                                            .font(.title2)
+                                            .foregroundStyle(Theme.primary)
+                                    }
+                                    .padding()
+                                    .background(.thinMaterial)
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                     
-                    Spacer(minLength: 40)
+                    Spacer(minLength: 60)
                 }
                 .padding(.horizontal, Theme.padding)
-                .padding(.top, 8)
             }
         }
-        .navigationTitle("Lesson")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showQuiz) {
             if let quiz = quiz {
@@ -211,14 +174,10 @@ struct LessonDetailView: View {
     
     private func difficultyColor(_ difficulty: String) -> Color {
         switch difficulty {
-        case "beginner":
-            return Theme.success
-        case "intermediate":
-            return Theme.accent
-        case "advanced":
-            return Color.red
-        default:
-            return .secondary
+        case "beginner": return Theme.success
+        case "intermediate": return Theme.primary
+        case "advanced": return Theme.secondaryAccent
+        default: return .secondary
         }
     }
 }

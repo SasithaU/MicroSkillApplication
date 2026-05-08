@@ -3,86 +3,115 @@ import SwiftUI
 struct CategoriesView: View {
     @EnvironmentObject private var store: DataStore
     let categories = ["Tech", "Productivity", "General Knowledge"]
+    
+    let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Theme.background.ignoresSafeArea()
+        ZStack {
+            PremiumBackground()
 
-                ScrollView {
-                    VStack(spacing: Theme.spacing) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Explore Skills")
+                            .font(Theme.largeTitle())
+                        Text("Choose a category to start your journey")
+                            .font(Theme.body())
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(categories, id: \.self) { category in
-                            NavigationLink(destination: LessonListView(category: category)) {
-                                CategoryCard(
+                            NavigationLink(value: category) {
+                                CategoryGridCard(
                                     category: category,
                                     icon: categoryIcon(for: category),
-                                    color: categoryColor(for: category),
+                                    gradient: categoryGradient(for: category),
                                     lessonCount: store.lessons.filter { $0.category == category }.count
                                 )
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("\(category) category. \(store.lessons.filter { $0.category == category }.count) lessons available")
+                            .accessibilityLabel("\(category) category, \(store.lessons.filter { $0.category == category }.count) lessons")
+                            .accessibilityHint("Double tap to explore lessons in \(category)")
                         }
-
-                        Spacer(minLength: 40)
                     }
-                    .padding(.horizontal, Theme.padding)
+                    
+                    Spacer(minLength: 40)
                 }
+                .padding(.horizontal, Theme.padding)
             }
-            .navigationTitle("Categories")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     func categoryIcon(for category: String) -> String {
         switch category {
         case "Tech": return "laptopcomputer"
-        case "Productivity": return "checkmark.seal.fill"
-        case "General Knowledge": return "lightbulb.fill"
+        case "Productivity": return "timer"
+        case "General Knowledge": return "globe.americas.fill"
         default: return "book.fill"
         }
     }
 
-    func categoryColor(for category: String) -> Color {
+    func categoryGradient(for category: String) -> LinearGradient {
         switch category {
-        case "Tech": return Theme.primary
-        case "Productivity": return Theme.accent
-        case "General Knowledge": return .orange
-        default: return .blue
+        case "Tech": return Theme.heroGradient
+        case "Productivity": return Theme.accentGradient
+        case "General Knowledge": return Theme.coralGradient
+        default: return Theme.heroGradient
         }
     }
 }
 
-struct CategoryCard: View {
+struct CategoryGridCard: View {
     let category: String
     let icon: String
-    let color: Color
+    let gradient: LinearGradient
     let lessonCount: Int
-
+    
     var body: some View {
-        HStack(spacing: 16) {
-            IconTile(systemName: icon, color: color)
-
+        VStack(alignment: .leading, spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(gradient.opacity(0.15))
+                    .frame(width: 54, height: 54)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(gradient)
+            }
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(category)
                     .font(Theme.headline())
                     .foregroundColor(.primary)
-
-                Text("\(lessonCount) lessons")
-                    .font(Theme.caption())
+                
+                Text("\(lessonCount) Lessons")
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(.secondary)
         }
-        .cardStyle()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(Color.white.opacity(0.02))
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
+        .premiumShadow()
     }
 }
 
 #Preview {
-    CategoriesView()
+    NavigationStack {
+        CategoriesView()
+            .environmentObject(DataStore.shared)
+    }
 }

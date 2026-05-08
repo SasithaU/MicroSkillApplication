@@ -38,337 +38,236 @@ struct HomeView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Theme.background.ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: Theme.spacing * 1.5) {
-                        // Greeting Header
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("\(greeting), \(userName)")
-                                .font(Theme.largeTitle())
-                                .foregroundColor(.primary)
-                            
-                            Text("Personalized for \(userGoal).")
-                                .font(Theme.body())
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 8)
-
-                        HStack(spacing: 10) {
-                            IconTile(systemName: "line.3.horizontal.decrease.circle.fill", color: Theme.primary)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Focus Preference")
-                                    .font(Theme.caption())
-                                    .foregroundColor(.secondary)
-                                    .textCase(.uppercase)
-                                Text("Next lessons prioritize \(preferredCategory). You can change this in Settings.")
+        ZStack {
+            PremiumBackground()
+            
+            ScrollView {
+                VStack(spacing: Theme.spacing * 1.8) {
+                    // Hero Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(greeting)
                                     .font(Theme.body())
-                                    .foregroundColor(.primary)
-                            }
-
-                            Spacer()
-                        }
-                        .cardStyle()
-                        
-                        // Streak Card
-                        HStack(spacing: 12) {
-                            IconTile(systemName: "flame.fill", color: .orange)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("\(store.progress.streak) Day Streak")
-                                    .font(Theme.headline())
-                                    .foregroundColor(.primary)
-                                
-                                Text("Keep it up!")
-                                    .font(Theme.caption())
                                     .foregroundColor(.secondary)
+                                
+                                Text(userName)
+                                    .font(Theme.largeTitle())
+                                    .foregroundColor(.primary)
                             }
                             
                             Spacer()
+                            
+                            NavigationLink(value: HomeDestination.profile) {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundStyle(Theme.primary)
+                                    .background(Circle().fill(.ultraThinMaterial))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Profile")
+                            .accessibilityHint("View your profile and account settings")
                         }
-                        .cardStyle()
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(store.progress.streak) day learning streak. Keep it up!")
                         
-                        // Progress Overview
+                        Text("Personalized for \(userGoal)")
+                            .font(Theme.caption())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Theme.heroGradient)
+                            .clipShape(Capsule())
+                            .accessibilityLabel("Learning goal: \(userGoal)")
+                    }
+                    .padding(.top, 20)
+                    
+                    // Focus Preference Card
+                    HStack(spacing: 16) {
+                        IconTile(systemName: "line.3.horizontal.decrease.circle.fill", color: Theme.primary, isGlass: true)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Current Focus")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
+                                .textCase(.uppercase)
+                            Text(preferredCategory)
+                                .font(Theme.headline())
+                                .foregroundColor(.primary)
+                        }
+                        
+                        Spacer()
+                    }
+                    .glassCardStyle()
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Current focus: \(preferredCategory)")
+                    
+                    // Progress & Streak Row
+                    HStack(spacing: Theme.spacing) {
+                        // Streak
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Your Progress")
-                                    .font(Theme.headline())
-                                
-                                Spacer()
-                                
-                                Text("\(Int(progressValue * 100))%")
-                                    .font(Theme.headline())
-                                    .foregroundStyle(Theme.primary)
+                                Image(systemName: "flame.fill")
+                                    .foregroundStyle(.orange)
+                                Text("Streak")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
                             }
-
-                            Text(progressValue >= 1 ? "Complete" : "In progress")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
                             
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.secondary.opacity(0.15))
-                                        .frame(height: 12)
-                                    
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Theme.primary)
-                                        .frame(width: geo.size.width * progressValue, height: 12)
-                                        .animation(.snappy(duration: 0.6), value: progressValue)
-                                }
-                            }
-                            .frame(height: 12)
-                            .accessibilityHidden(true)
-                            
-                            Text("\(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) lessons completed")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
+                            Text("\(store.progress.streak) Days")
+                                .font(Theme.title())
+                                .foregroundColor(.primary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .cardStyle()
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Your progress is \(Int(progressValue * 100)) percent. \(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) lessons completed.")
+                        .accessibilityLabel("\(store.progress.streak) day streak")
                         
-                        // View Learning Path
-                        NavigationLink(destination: LearningPathView()) {
-                            HStack(spacing: 12) {
-                                IconTile(systemName: "signpost.right.fill", color: Theme.primary)
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("View Learning Path")
-                                        .font(Theme.headline())
-                                        .foregroundColor(.primary)
-                                    
-                                    Text("See your progress and next steps")
-                                        .font(Theme.caption())
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.secondary)
-                            }
-                            .cardStyle()
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("View Learning Path. See your progress and next steps")
-                        
-                        // Personalized Recommendation from LearningModel
-                        let recommendation = LearningModel.shared.personalizedRecommendation()
-                        HStack(spacing: 12) {
-                            IconTile(systemName: "sparkles", color: Theme.accent)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Personalized Tip")
+                        // Mastery Points
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(.yellow)
+                                Text("Points")
                                     .font(Theme.caption())
                                     .foregroundColor(.secondary)
-                                    .textCase(.uppercase)
-                                
-                                Text(recommendation)
-                                    .font(Theme.body())
-                                    .foregroundColor(.primary)
                             }
+                            
+                            Text("\(store.progress.totalPoints)")
+                                .font(Theme.title())
+                                .foregroundColor(.primary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .cardStyle()
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(store.progress.totalPoints) mastery points")
+                    }
+                    
+                    // Main Progress Overview
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("Global Mastery")
+                                .font(Theme.headline())
                             
                             Spacer()
-                        }
-                        .cardStyle()
-                        .accessibilityLabel("Personalized tip: \(recommendation)")
-                        
-                        // Recommended Category
-                        let recommendedCategory = LearningModel.shared.recommendedNextCategory()
-                        HStack(spacing: 12) {
-                            IconTile(systemName: "arrow.right.circle.fill", color: Theme.primary)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Recommended Focus")
-                                    .font(Theme.caption())
-                                    .foregroundColor(.secondary)
-                                    .textCase(.uppercase)
-                                
-                                Text(recommendedCategory)
-                                    .font(Theme.headline())
-                                    .foregroundColor(.primary)
-                            }
-                            
-                            Spacer()
+                            Text("\(Int(progressValue * 100))%")
+                                .font(Theme.headline())
+                                .foregroundStyle(Theme.primary)
                         }
-                        .cardStyle()
-                        .accessibilityLabel("Recommended focus category: \(recommendedCategory)")
-                        
-                        // Context-Aware Recommendation
-                        if LocationManager.shared.detectedContext != "unknown" {
-                            let context = LocationManager.shared.detectedContext
-                            let recommendedCategory = LocationManager.shared.recommendedCategory(for: context)
-                            let contextLesson = store.firstIncompleteLesson(inCategory: recommendedCategory)
-                            
-                            if let lesson = contextLesson {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack {
-                                        Image(systemName: "location.fill")
-                                            .foregroundStyle(Theme.primary)
-                                        Text("Recommended for \(context.capitalized)")
-                                            .font(Theme.headline())
-                                            .foregroundStyle(Theme.primary)
-                                    }
-                                    
-                                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            HStack {
-                                                Text(lesson.category)
-                                                    .font(Theme.caption())
-                                                    .foregroundStyle(Theme.primary)
-                                                    .padding(.horizontal, 10)
-                                                    .padding(.vertical, 4)
-                                                    .background(Theme.primary.opacity(0.12))
-                                                    .clipShape(Capsule())
-                                                
-                                                Spacer()
-                                                
-                                                Image(systemName: "chevron.right")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                            
-                                            Text(lesson.title)
-                                                .font(.headline)
-                                                .foregroundColor(.primary)
-                                            
-                                            Text(lesson.content)
-                                                .font(Theme.body())
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(2)
-                                            
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "location.circle.fill")
-                                                    .foregroundStyle(Theme.primary)
-                                                Text("Start Now")
-                                                    .font(Theme.caption())
-                                                    .foregroundStyle(Theme.primary)
-                                            }
-                                            .padding(.top, 4)
-                                        }
-                                        .cardStyle()
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("Context recommendation: \(lesson.title) in \(lesson.category) for \(context). Start now.")
-                                }
-                            }
-                        }
-                        
-                        // Continue Learning or Browse Lessons
-                        if let lesson = nextLesson {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Continue Learning")
-                                    .font(Theme.headline())
 
-                                Text("Prioritized for your selected focus (\(preferredCategory)).")
-                                    .font(Theme.caption())
-                                    .foregroundColor(.secondary)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.secondary.opacity(0.1))
+                                    .frame(height: 14)
                                 
-                                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Theme.heroGradient)
+                                    .frame(width: geo.size.width * progressValue, height: 14)
+                                    .shadow(color: Theme.primary.opacity(0.3), radius: 5, x: 0, y: 2)
+                            }
+                        }
+                        .frame(height: 14)
+                        .accessibilityLabel("Mastery progress: \(Int(progressValue * 100))%")
+                        
+                        HStack {
+                            Text("\(store.lessons.filter(\.isCompleted).count) Lessons Completed")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
+                            
+                            Spacer()
+                            
+                            NavigationLink(value: HomeDestination.learningPath) {
+                                Text("View Path")
+                                    .font(Theme.caption())
+                                    .foregroundStyle(Theme.primary)
+                            }
+                        }
+                    }
+                    .cardStyle()
+                    
+                    // Recommendations Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Recommended for You")
+                                .font(Theme.headline())
+                            Spacer()
+                            Image(systemName: "sparkles")
+                                .foregroundStyle(Theme.accent)
+                        }
+                        
+                        let recommendation = LearningModel.shared.personalizedRecommendation()
+                        Text(recommendation)
+                            .font(Theme.body())
+                            .foregroundColor(.secondary)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.accent.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .accessibilityLabel("Learning recommendation: \(recommendation)")
+                    }
+                    
+                    // Continue Learning Card
+                    if let lesson = nextLesson {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Up Next")
+                                .font(Theme.headline())
+                            
+                            NavigationLink(value: HomeDestination.lessonDetail(lesson)) {
+                                HStack(spacing: 16) {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        HStack {
-                                            Text(lesson.category)
-                                                .font(Theme.caption())
-                                                .foregroundStyle(Theme.primary)
-                                                .padding(.horizontal, 10)
-                                                .padding(.vertical, 4)
-                                                .background(Theme.primary.opacity(0.12))
-                                                .clipShape(Capsule())
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "chevron.right")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
+                                        Text(lesson.category.uppercased())
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(Theme.primary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Theme.primary.opacity(0.1))
+                                            .clipShape(Capsule())
                                         
                                         Text(lesson.title)
-                                            .font(.headline)
+                                            .font(Theme.headline())
                                             .foregroundColor(.primary)
                                         
                                         Text(lesson.content)
                                             .font(Theme.body())
                                             .foregroundColor(.secondary)
-                                            .lineLimit(2)
-                                        
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "play.circle.fill")
-                                                .foregroundStyle(Theme.primary)
-                                            Text("Resume")
-                                                .font(Theme.caption())
-                                                .foregroundStyle(Theme.primary)
-                                        }
-                                        .padding(.top, 4)
+                                            .lineLimit(1)
                                     }
-                                    .cardStyle()
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "play.circle.fill")
+                                        .font(.system(size: 44))
+                                        .foregroundStyle(Theme.heroGradient)
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Continue learning: \(lesson.title) in \(lesson.category). Resume lesson.")
+                                .padding(Theme.padding)
+                                .background(Color.white.opacity(0.05))
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                        .stroke(Theme.primary.opacity(0.2), lineWidth: 1)
+                                )
+                                .premiumShadow()
                             }
-                        } else {
-                            // Show Browse Lessons when all lessons are completed
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("All Lessons Completed")
-                                    .font(Theme.headline())
-                                
-                                NavigationLink(destination: CategoriesView()) {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        HStack {
-                                            IconTile(systemName: "book.fill", color: Theme.primary)
-                                            
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text("Browse All Lessons")
-                                                    .font(.headline)
-                                                    .foregroundColor(.primary)
-                                                
-                                                Text("Review completed lessons or explore new topics")
-                                                    .font(Theme.body())
-                                                    .foregroundColor(.secondary)
-                                                    .lineLimit(2)
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "chevron.right")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "arrow.right.circle.fill")
-                                                .foregroundStyle(Theme.primary)
-                                            Text("Explore")
-                                                .font(Theme.caption())
-                                                .foregroundStyle(Theme.primary)
-                                        }
-                                        .padding(.top, 4)
-                                    }
-                                    .cardStyle()
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Browse all lessons. Review completed lessons or explore new topics.")
-                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Continue learning: \(lesson.title)")
+                            .accessibilityHint("Double tap to start the next lesson in \(lesson.category)")
                         }
-                        
-                        Spacer(minLength: 40)
                     }
-                    .padding(.horizontal, Theme.padding)
+                    
+                    Spacer(minLength: 40)
                 }
+                .padding(.horizontal, Theme.padding)
             }
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("")
+        .navigationBarHidden(true)
     }
 }
 
 #Preview {
-    HomeView()
-        .environmentObject(DataStore.shared)
+    NavigationStack {
+        HomeView()
+            .environmentObject(DataStore.shared)
+    }
 }

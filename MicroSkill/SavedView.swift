@@ -4,102 +4,122 @@ struct SavedView: View {
     @EnvironmentObject var store: DataStore
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Theme.background.ignoresSafeArea()
-                
-                if store.savedLessons.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "bookmark.slash")
-                            .font(.system(size: 60))
-                            .foregroundColor(.secondary.opacity(0.4))
-                        
-                        Text("No Saved Lessons")
-                            .font(Theme.headline())
-                            .foregroundColor(.primary)
-                        
-                        Text("Bookmark lessons while learning to access them quickly here.")
+        ZStack {
+            PremiumBackground()
+            
+            if store.savedLessons.isEmpty {
+                VStack(spacing: 24) {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.primary.opacity(0.1))
+                            .frame(width: 120, height: 120)
+                        Image(systemName: "bookmark.slash.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Theme.primary.opacity(0.4))
+                    }
+                    
+                    VStack(spacing: 8) {
+                        Text("No Bookmarks Yet")
+                            .font(Theme.title())
+                        Text("Save interesting lessons to read them later.")
                             .font(Theme.body())
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        VStack(spacing: Theme.spacing) {
-                            Text("\(store.savedLessons.count) saved")
-                                .font(Theme.caption())
+                    .padding(.horizontal, 40)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Saved Lessons")
+                                .font(Theme.largeTitle())
+                            Text("Your curated library of micro-skills")
+                                .font(Theme.body())
                                 .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 20)
+                        
+                        VStack(spacing: 16) {
                             ForEach(store.savedLessons) { lesson in
-                                NavigationLink(value: lesson) {
+                                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
                                     SavedLessonRow(lesson: lesson)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Saved lesson: \(lesson.title) in \(lesson.category)")
+                                .accessibilityHint("Double tap to read this lesson")
                             }
                         }
-                        .padding(.horizontal, Theme.padding)
-                        .padding(.top, 8)
                     }
-                    .navigationDestination(for: Lesson.self) { lesson in
-                        LessonDetailView(lesson: lesson)
-                    }
+                    .padding(.horizontal, Theme.padding)
                 }
             }
-            .navigationTitle("Saved")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-// MARK: - Saved Lesson Row
 
 struct SavedLessonRow: View {
     let lesson: Lesson
     @EnvironmentObject var store: DataStore
     
     var body: some View {
-        HStack(spacing: 12) {
-            IconTile(systemName: "bookmark.fill", color: Theme.primary)
-            
-            VStack(alignment: .leading, spacing: 6) {
-                Text(lesson.category)
-                    .font(Theme.caption())
-                    .foregroundColor(Theme.primary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(Theme.primary.opacity(0.12))
-                    .clipShape(Capsule())
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(lesson.category.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Theme.primary.opacity(0.1))
+                        .clipShape(Capsule())
+                    
+                    Spacer()
+                    
+                    Button {
+                        withAnimation {
+                            store.toggleSaveLesson(lesson)
+                        }
+                    } label: {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundStyle(Theme.primary)
+                            .font(.title3)
+                    }
+                    .accessibilityLabel("Remove from saved")
+                    .accessibilityHint("Double tap to remove this lesson from your bookmarks")
+                }
                 
-                Text(lesson.title)
-                    .font(Theme.headline())
-                    .foregroundColor(.primary)
-                
-                Text(lesson.content)
-                    .font(Theme.body())
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(lesson.title)
+                        .font(Theme.headline())
+                        .foregroundColor(.primary)
+                    
+                    Text(lesson.content)
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .lineSpacing(4)
+                }
             }
-            
-            Spacer()
-            
-            Button {
-                store.toggleSaveLesson(lesson)
-            } label: {
-                Image(systemName: "bookmark.fill")
-                    .font(.title3)
-                    .foregroundColor(Theme.primary)
-            }
-            .buttonStyle(.plain)
         }
-        .cardStyle()
+        .padding(20)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+        )
+        .premiumShadow()
     }
 }
 
 #Preview {
-    SavedView()
-        .environmentObject(DataStore.shared)
+    NavigationStack {
+        SavedView()
+            .environmentObject(DataStore.shared)
+    }
 }

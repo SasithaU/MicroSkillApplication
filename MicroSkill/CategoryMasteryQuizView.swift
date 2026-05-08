@@ -11,16 +11,21 @@ struct CategoryMasteryQuizView: View {
     
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            PremiumBackground()
             
             ScrollView {
-                VStack(spacing: Theme.spacing * 1.5) {
+                VStack(spacing: 24) {
                     // Header
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Image(systemName: "sparkles")
-                                .font(.title2)
-                                .foregroundColor(Theme.accent)
+                            ZStack {
+                                Circle()
+                                    .fill(Theme.accent.opacity(0.1))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(Theme.accent)
+                                    .font(.title3)
+                            }
                             
                             Text("\(category) Mastery Quiz")
                                 .font(Theme.headline())
@@ -29,42 +34,39 @@ struct CategoryMasteryQuizView: View {
                             Spacer()
                         }
                         
-                        Text("Test your knowledge and earn mastery points!")
+                        Text("Earn your mastery badge by completing this challenge!")
                             .font(Theme.body())
                             .foregroundColor(.secondary)
-                            .multilineTextAlignment(.leading)
                     }
-                    .padding(.horizontal, Theme.padding)
+                    .padding(.top, 20)
                     
                     // Question Card
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Question")
-                            .font(.caption)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("QUESTION")
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.secondary)
-                            .textCase(.uppercase)
+                            .tracking(1)
                         
                         Text(quiz.question)
-                            .font(Theme.title3())
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                             .fixedSize(horizontal: false, vertical: true)
+                            .lineSpacing(4)
                     }
-                    .padding()
-                    .cardStyle()
+                    .glassCardStyle()
                     
                     // Answer Options
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         ForEach(Array(quiz.options.enumerated()), id: \.offset) { index, option in
                             Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                     selectedAnswerIndex = index
                                     isCorrect = index == quiz.correctAnswerIndex
                                     showResult = true
-                                    
-                                    // Mark quiz as used
                                     store.markCategoryMasteryQuizUsed(quiz)
                                 }
                             } label: {
-                                HStack {
+                                HStack(spacing: 16) {
                                     Text(option)
                                         .font(Theme.body())
                                         .foregroundColor(.primary)
@@ -76,39 +78,48 @@ struct CategoryMasteryQuizView: View {
                                         Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
                                             .font(.title3)
                                             .foregroundColor(isCorrect ? Theme.success : Color.red)
-                                    } else if !showResult {
-                                        Image(systemName: "circle")
-                                            .font(.title3)
-                                            .foregroundColor(.secondary)
+                                            .symbolEffect(.bounce, value: showResult)
+                                    } else {
+                                        Circle()
+                                            .strokeBorder(Theme.primary.opacity(0.2), lineWidth: 1)
+                                            .frame(width: 24, height: 24)
+                                            .overlay(
+                                                Circle()
+                                                    .fill(selectedAnswerIndex == index ? Theme.primary : Color.clear)
+                                                    .frame(width: 14, height: 14)
+                                            )
                                     }
                                 }
-                                .padding()
-                                .cardStyle()
+                                .padding(20)
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 24))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                                    RoundedRectangle(cornerRadius: 24)
                                         .stroke(
                                             showResult && selectedAnswerIndex == index 
                                                 ? (isCorrect ? Theme.success : Color.red) 
-                                                : Theme.primary.opacity(0.1),
-                                            lineWidth: 2
+                                                : Color.white.opacity(0.15),
+                                            lineWidth: 1.5
                                         )
                                 )
                                 .opacity(showResult && selectedAnswerIndex != index ? 0.6 : 1.0)
                             }
                             .buttonStyle(.plain)
                             .disabled(showResult)
+                            .accessibilityLabel("Option: \(option)")
+                            .accessibilityHint("Double tap to select this answer")
                         }
                     }
                     
                     // Result Message
                     if showResult {
-                        VStack(spacing: 16) {
-                            HStack {
-                                Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        VStack(spacing: 20) {
+                            HStack(spacing: 12) {
+                                Image(systemName: isCorrect ? "checkmark.seal.fill" : "exclamationmark.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(isCorrect ? Theme.success : Color.red)
                                 
-                                Text(isCorrect ? "Correct!" : "Incorrect")
+                                Text(isCorrect ? "Mastery Achieved!" : "Try Again Next Time")
                                     .font(Theme.headline())
                                     .foregroundColor(isCorrect ? Theme.success : Color.red)
                                 
@@ -116,28 +127,36 @@ struct CategoryMasteryQuizView: View {
                             }
                             
                             if !isCorrect {
-                                Text("The correct answer is: \(quiz.options[quiz.correctAnswerIndex])")
+                                Text("Knowledge builds over time. Review the lessons and try again!")
                                     .font(Theme.body())
                                     .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                            } else {
+                                Text("You've demonstrated exceptional understanding of \(category).")
+                                    .font(Theme.body())
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
                             }
                             
-                            Button("Close") {
+                            Button {
                                 dismiss()
+                            } label: {
+                                Text("Continue")
                             }
-                            .buttonStyle(.primary)
+                            .buttonStyle(PrimaryButtonStyle())
                         }
-                        .padding()
-                        .cardStyle()
+                        .padding(24)
+                        .glassCardStyle()
+                        .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
                     }
                     
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)
-                .padding(.top, 8)
             }
-            .navigationTitle("Mastery Quiz")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

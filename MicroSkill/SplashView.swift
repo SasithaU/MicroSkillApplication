@@ -2,55 +2,59 @@ import SwiftUI
 
 struct SplashView: View {
     @State private var isActive = false
-    @State private var scale: CGFloat = 0.8
+    @State private var scale: CGFloat = 0.7
     @State private var opacity: Double = 0
+    @State private var symbolScale: CGFloat = 0.5
     
     var body: some View {
         ZStack {
-            Theme.background
-                .ignoresSafeArea()
+            PremiumBackground()
             
-            VStack(spacing: 24) {
+            VStack(spacing: 28) {
                 ZStack {
                     Circle()
-                        .fill(Theme.primary.opacity(0.15))
-                        .frame(width: 160, height: 160)
+                        .fill(Theme.heroGradient.opacity(0.1))
+                        .frame(width: 180, height: 180)
+                        .blur(radius: 20)
                     
-                    Image(systemName: "book.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Theme.primary)
-                        .accessibilityLabel("Book icon")
+                    Image(systemName: "book.pages.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(Theme.heroGradient)
+                        .scaleEffect(symbolScale)
+                        .premiumShadow()
                 }
                 
-                Text("MicroSkill")
-                    .font(Theme.largeTitle())
-                    .foregroundColor(.primary)
-                    .accessibilityLabel("Micro Skill app")
-                
-                Text("Learn something new every day")
-                    .font(Theme.body())
-                    .foregroundColor(.secondary)
-                    .accessibilityLabel("Tagline: Learn something new every day")
+                VStack(spacing: 12) {
+                    Text("MicroSkill")
+                        .font(.system(size: 44, weight: .black, design: .rounded))
+                        .foregroundStyle(Theme.primary)
+                        .tracking(1.5)
+                    
+                    Text("MASTER THE ESSENTIALS")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .tracking(3)
+                        .opacity(0.7)
+                }
             }
             .scaleEffect(scale)
             .opacity(opacity)
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) {
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.7)) {
                 scale = 1.0
                 opacity = 1.0
+                symbolScale = 1.0
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation(.easeIn(duration: 0.3)) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation(.easeInOut(duration: 0.5)) {
                     isActive = true
                 }
             }
         }
         .fullScreenCover(isPresented: $isActive) {
-            OnboardingView()
+            RootView()
         }
     }
 }

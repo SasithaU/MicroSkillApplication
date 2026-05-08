@@ -33,5 +33,14 @@ struct CategoryMasteryQuiz: Identifiable, Codable {
 struct UserProgress: Codable {
     var completedLessons: Int = 0
     var streak: Int = 0
+    var totalPoints: Int = 0
     var lastAccessedLessonId: UUID?
+}
+
+// Navigation destinations for Home tab
+enum HomeDestination: Hashable {
+    case learningPath
+    case lessonDetail(Lesson)
+    case categories
+    case profile
 }

@@ -8,173 +8,204 @@ struct LessonListView: View {
         store.lessons.filter { $0.category == category }
     }
     
+    private func isNewLesson(_ lesson: Lesson) -> Bool {
+        let categoryLessons = filteredLessons.sorted { $0.order < $1.order }
+        return categoryLessons.prefix(3).contains { $0.id == lesson.id }
+    }
+    
+    var body: some View {
+        ZStack {
+            PremiumBackground()
+            
+            if filteredLessons.isEmpty {
+                emptyStateView
+            } else {
+                lessonsView
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+    
     private var emptyStateView: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                Spacer(minLength: 40)
-                
-                Image(systemName: "book.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundColor(.secondary)
-                
-                Text("No Lessons Available")
-                    .font(Theme.headline())
-                    .foregroundColor(.primary)
-                
-                Text("There are no lessons in the \(category) category yet, or all lessons have been completed.")
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Theme.primary.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                Image(systemName: "book.closed.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Theme.primary.opacity(0.4))
+            }
+            
+            VStack(spacing: 8) {
+                Text("No Lessons Found")
+                    .font(Theme.title())
+                Text("We're currently curating lessons for \(category). Check back soon!")
                     .font(Theme.body())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                
-                Text("Total lessons loaded: \(store.lessons.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer(minLength: 40)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, Theme.padding)
+            .padding(.horizontal, 40)
         }
-        .background(Theme.background.ignoresSafeArea())
-        .navigationTitle(category)
     }
     
     private var lessonsView: some View {
         ScrollView {
-            VStack(spacing: Theme.spacing) {
-                ForEach(filteredLessons) { lesson in
-                    let unlocked = store.isLessonUnlocked(lesson)
-                    
-                    if unlocked {
-                        NavigationLink(destination: LessonDetailView(lesson: lesson)) {
-                            lessonRow(lesson: lesson, unlocked: true)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        lessonRow(lesson: lesson, unlocked: false)
-                    }
+            VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(category)
+                        .font(Theme.largeTitle())
+                    Text("\(filteredLessons.count) Lessons Available")
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 20)
                 
-                let categoryQuizzes = store.getCategoryMasteryQuizzes(for: category)
-                if !categoryQuizzes.isEmpty {
-                    categoryMasterySection(quizzes: categoryQuizzes)
+                VStack(spacing: 16) {
+                    ForEach(filteredLessons) { lesson in
+                        let unlocked = store.isLessonUnlocked(lesson)
+                        
+                        if unlocked {
+                            NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                                lessonRow(lesson: lesson, unlocked: true)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            lessonRow(lesson: lesson, unlocked: false)
+                        }
+                    }
+                    
+                    let categoryQuizzes = store.getCategoryMasteryQuizzes(for: category)
+                    if !categoryQuizzes.isEmpty {
+                        categoryMasterySection(quizzes: categoryQuizzes)
+                    }
                 }
                 
                 Spacer(minLength: 40)
             }
             .padding(.horizontal, Theme.padding)
-            .padding(.top, 8)
-        }
-        .background(Theme.background.ignoresSafeArea())
-        .navigationTitle(category)
-    }
-    
-    @ViewBuilder
-    var body: some View {
-        if filteredLessons.isEmpty {
-            emptyStateView
-        } else {
-            lessonsView
         }
     }
     
     private func categoryMasterySection(quizzes: [CategoryMasteryQuiz]) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             HStack {
                 Image(systemName: "sparkles")
                     .foregroundColor(Theme.accent)
-                Text("Category Mastery")
+                    .font(.title3)
+                Text("Mastery Challenges")
                     .font(Theme.headline())
-                    .foregroundColor(.primary)
             }
-            .padding(.top, 8)
-            
-            Text("Test your knowledge with these \(category) mastery quizzes. Available for a limited time!")
-                .font(Theme.body())
-                .foregroundColor(.secondary)
             
             VStack(spacing: 12) {
-                ForEach(Array(quizzes.prefix(5).enumerated()), id: \.element.id) { index, quiz in
+                ForEach(Array(quizzes.prefix(3).enumerated()), id: \.element.id) { index, quiz in
                     NavigationLink(destination: SimpleCategoryQuizView(quiz: quiz, category: category)) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(category) Quiz \(index + 1)")
-                                    .font(.subheadline.weight(.medium))
-                                Text("Challenge yourself")
-                                    .font(.caption)
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Theme.accent.opacity(0.1))
+                                    .frame(width: 40, height: 40)
+                                Text("\(index + 1)")
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(Theme.accent)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Mastery Quiz")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                Text("Earn points & mastery")
+                                    .font(.system(size: 12))
                                     .foregroundColor(.secondary)
                             }
+                            
                             Spacer()
-                            Image(systemName: "play.fill")
-                                .font(.caption)
-                                .foregroundColor(Theme.primary)
+                            
+                            Image(systemName: "play.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(Theme.accent)
                         }
                         .padding()
-                        .background(Theme.primary.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
-                        )
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.accent.opacity(0.1), lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding()
+        .padding(24)
         .background(Theme.accent.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
-        .padding(.top, 16)
+        .clipShape(RoundedRectangle(cornerRadius: 28))
     }
     
+    @ViewBuilder
     private func lessonRow(lesson: Lesson, unlocked: Bool) -> some View {
-        HStack(spacing: 12) {
-            IconTile(
-                systemName: lesson.isCompleted ? "checkmark.circle.fill" : unlocked ? "book.fill" : "lock.fill",
-                color: lesson.isCompleted ? Theme.success : unlocked ? Theme.primary : .secondary
-            )
+        let isNew = isNewLesson(lesson)
+        
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(lesson.isCompleted ? Theme.success.opacity(0.1) : 
+                          unlocked ? Theme.primary.opacity(0.1) : Color.secondary.opacity(0.1))
+                    .frame(width: 48, height: 48)
+                
+                Image(systemName: lesson.isCompleted ? "checkmark" : unlocked ? "book.fill" : "lock.fill")
+                    .foregroundStyle(lesson.isCompleted ? Theme.success : 
+                                   unlocked ? Theme.primary : .secondary)
+                    .font(.system(size: 16, weight: .bold))
+            }
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
                     Text(lesson.title)
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundColor(unlocked ? .primary : .secondary)
                     
-                    // Difficulty Badge
-                    Text(lesson.difficulty.capitalized)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(difficultyColor(lesson.difficulty))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(difficultyColor(lesson.difficulty).opacity(0.12))
-                        .clipShape(Capsule())
+                    if isNew && unlocked {
+                        Text("NEW")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Theme.accent)
+                            .clipShape(Capsule())
+                    }
                 }
                 
-                Text(lesson.content)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                HStack(spacing: 12) {
+                    Label(lesson.difficulty.capitalized, systemImage: "gauge.with.dots.needle.33percent")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(difficultyColor(lesson.difficulty))
+                    
+                    if unlocked {
+                        Text("Ready to start")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
+            
             Spacer()
             
-            Image(systemName: unlocked ? "chevron.right" : "lock.fill")
-                .font(.caption.weight(.semibold))
-                .foregroundColor(.secondary)
+            if unlocked {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
         }
-        .cardStyle()
+        .padding(16)
+        .glassCardStyle()
         .opacity(unlocked ? 1.0 : 0.6)
     }
     
     private func difficultyColor(_ difficulty: String) -> Color {
         switch difficulty {
-        case "beginner":
-            return Theme.success
-        case "intermediate":
-            return Theme.accent
-        case "advanced":
-            return Color.red
-        default:
-            return .secondary
+        case "beginner": return Theme.success
+        case "intermediate": return Theme.accent
+        case "advanced": return Theme.secondaryAccent
+        default: return .secondary
         }
     }
 }
@@ -190,60 +221,49 @@ struct SimpleCategoryQuizView: View {
     
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            PremiumBackground()
             
             ScrollView {
-                VStack(spacing: Theme.spacing * 1.5) {
-                    // Header
-                    VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "sparkles")
-                                .font(.title2)
-                                .foregroundColor(Theme.accent)
-                            
-                            Text("\(category) Mastery Quiz")
-                                .font(Theme.headline())
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                        }
-                        
-                        Text("Test your knowledge and earn mastery points!")
-                            .font(Theme.body())
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                    .padding(.horizontal, Theme.padding)
-                    
-                    // Question Card
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Question")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
+                VStack(spacing: 28) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(category)
+                            .font(Theme.caption())
+                            .foregroundColor(Theme.accent)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Theme.accent.opacity(0.1))
+                            .clipShape(Capsule())
                         
                         Text(quiz.question)
                             .font(Theme.title())
                             .foregroundColor(.primary)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding()
-                    .cardStyle()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 20)
                     
-                    // Answer Options
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         ForEach(Array(quiz.options.enumerated()), id: \.offset) { index, option in
                             Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                     selectedAnswerIndex = index
                                     isCorrect = index == quiz.correctAnswerIndex
                                     showResult = true
-                                    
-                                    // Mark quiz as used
                                     store.markCategoryMasteryQuizUsed(quiz)
                                 }
                             } label: {
-                                HStack {
+                                HStack(spacing: 16) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(showResult && index == quiz.correctAnswerIndex ? Theme.success.opacity(0.1) :
+                                                  showResult && index == selectedAnswerIndex ? Color.red.opacity(0.1) :
+                                                  Color.primary.opacity(0.05))
+                                            .frame(width: 40, height: 40)
+                                        Text("\(String(Character(UnicodeScalar(65 + index)!)))")
+                                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                                            .foregroundColor(showResult && index == quiz.correctAnswerIndex ? Theme.success :
+                                                           showResult && index == selectedAnswerIndex ? .red : .secondary)
+                                    }
+                                    
                                     Text(option)
                                         .font(Theme.body())
                                         .foregroundColor(.primary)
@@ -251,72 +271,63 @@ struct SimpleCategoryQuizView: View {
                                     
                                     Spacer()
                                     
-                                    if showResult && selectedAnswerIndex == index {
-                                        Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                    if showResult {
+                                        Image(systemName: index == quiz.correctAnswerIndex ? "checkmark.circle.fill" : 
+                                                       (index == selectedAnswerIndex ? "xmark.circle.fill" : ""))
+                                            .foregroundStyle(index == quiz.correctAnswerIndex ? Theme.success : .red)
                                             .font(.title3)
-                                            .foregroundColor(isCorrect ? Theme.success : Color.red)
-                                    } else if !showResult {
-                                        Image(systemName: "circle")
-                                            .font(.title3)
-                                            .foregroundColor(.secondary)
                                     }
                                 }
                                 .padding()
-                                .cardStyle()
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                        .stroke(
-                                            showResult && selectedAnswerIndex == index 
-                                                ? (isCorrect ? Theme.success : Color.red) 
-                                                : Theme.primary.opacity(0.1),
-                                            lineWidth: 2
-                                        )
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(showResult && index == quiz.correctAnswerIndex ? Theme.success :
+                                                showResult && index == selectedAnswerIndex ? Color.red :
+                                                Color.white.opacity(0.2), lineWidth: 1.5)
                                 )
-                                .opacity(showResult && selectedAnswerIndex != index ? 0.6 : 1.0)
+                                .premiumShadow()
                             }
                             .buttonStyle(.plain)
                             .disabled(showResult)
                         }
                     }
                     
-                    // Result Message
                     if showResult {
-                        VStack(spacing: 16) {
-                            HStack {
-                                Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        VStack(spacing: 20) {
+                            HStack(spacing: 12) {
+                                Image(systemName: isCorrect ? "trophy.fill" : "lightbulb.fill")
                                     .font(.title2)
-                                    .foregroundColor(isCorrect ? Theme.success : Color.red)
+                                    .foregroundStyle(isCorrect ? .yellow : Theme.accent)
                                 
-                                Text(isCorrect ? "Correct!" : "Incorrect")
+                                Text(isCorrect ? "Mastery Achieved!" : "Keep Learning")
                                     .font(Theme.headline())
-                                    .foregroundColor(isCorrect ? Theme.success : Color.red)
-                                
-                                Spacer()
                             }
                             
                             if !isCorrect {
-                                Text("The correct answer is: \(quiz.options[quiz.correctAnswerIndex])")
+                                Text("The correct insight: \(quiz.options[quiz.correctAnswerIndex])")
                                     .font(Theme.body())
                                     .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
                             }
                             
-                            Button("Close") {
-                                dismiss()
+                            Button { dismiss() } label: {
+                                Text("Continue Learning")
                             }
                             .buttonStyle(PrimaryButtonStyle())
                         }
-                        .padding()
-                        .cardStyle()
+                        .padding(24)
+                        .glassCardStyle()
                     }
                     
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)
-                .padding(.top, 8)
             }
-            .navigationTitle("Mastery Quiz")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

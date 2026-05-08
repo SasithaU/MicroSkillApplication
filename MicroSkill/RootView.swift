@@ -41,27 +41,34 @@ struct BiometricAuthView: View {
     
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            PremiumBackground()
             
             VStack(spacing: 32) {
                 Spacer()
                 
-                Image(systemName: "lock.shield.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(Theme.primary)
-                    .accessibilityHidden(true)
+                ZStack {
+                    Circle()
+                        .fill(Theme.primary.opacity(0.1))
+                        .frame(width: 140, height: 140)
+                        .blur(radius: 20)
+                    
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(Theme.heroGradient)
+                        .premiumShadow()
+                }
                 
-                Text("Secure Access")
-                    .font(Theme.largeTitle())
-                    .foregroundColor(.primary)
-                    .accessibilityAddTraits(.isHeader)
-                
-                Text("Authenticate with \(authManager.biometricType) to access your learning progress.")
-                    .font(Theme.body())
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .accessibilityLabel("Authenticate to access your learning progress.")
+                VStack(spacing: 12) {
+                    Text("Secure Access")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    
+                    Text("Authenticate with \(authManager.biometricType) to unlock your learning journey.")
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
                 
                 if let error = authManager.authError {
                     Text(error)
@@ -69,7 +76,7 @@ struct BiometricAuthView: View {
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
-                        .accessibilityLabel("Authentication error. \(error)")
+                        .transition(.opacity)
                 }
                 
                 Button {
@@ -77,18 +84,11 @@ struct BiometricAuthView: View {
                 } label: {
                     HStack(spacing: 10) {
                         Image(systemName: authManager.biometricIconName)
-                            .font(.title3)
-                        Text("Authenticate with \(authManager.biometricType)")
-                            .font(Theme.headline())
+                        Text("Unlock with \(authManager.biometricType)")
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Theme.primary)
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, Theme.padding)
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.horizontal, 40)
                 .accessibilityLabel("Authenticate with \(authManager.biometricType)")
                 .accessibilityHint("Double tap to unlock the app.")
                 

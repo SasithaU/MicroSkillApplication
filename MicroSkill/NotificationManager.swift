@@ -47,7 +47,11 @@ class NotificationManager: ObservableObject {
     func checkAuthorization() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
-                self.isAuthorized = settings.authorizationStatus == .authorized
+                let status = settings.authorizationStatus == .authorized
+                if self.isAuthorized != status {
+                    self.isAuthorized = status
+                    print("Notification authorization status updated: \(status)")
+                }
             }
         }
     }
@@ -89,8 +93,11 @@ class NotificationManager: ObservableObject {
     }
     
     func scheduleDailyReminder(at hour: Int = 9, minute: Int = 0) {
+        // Ensure categories are registered
         registerNotificationCategories()
-        cancelAllNotifications()
+        
+        // Remove existing daily reminder if any, but don't wipe everything
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [NotificationID.dailyReminder])
         
         let content = UNMutableNotificationContent()
         content.title = "Time to learn! 📚"
@@ -102,15 +109,19 @@ class NotificationManager: ObservableObject {
         var dateComponents = DateComponents()
         dateComponents.hour = hour
         dateComponents.minute = minute
+        dateComponents.second = 0 // Ensure it triggers at the start of the minute
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         let request = UNNotificationRequest(identifier: NotificationID.dailyReminder, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("Failed to schedule notification: \(error)")
+                print("❌ Failed to schedule notification: \(error.localizedDescription)")
             } else {
-                print("Daily reminder scheduled for \(hour):\(String(format: "%02d", minute))")
+                print("✅ Daily reminder successfully scheduled for \(hour):\(String(format: "%02d", minute))")
+                DispatchQueue.main.async {
+                    self.checkAuthorization()
+                }
             }
         }
     }

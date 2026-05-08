@@ -13,6 +13,19 @@ final class DataStore: ObservableObject {
     
     private let stack = CoreDataStack.shared
     private var isLoaded = false
+    private let practiceBatchSize = 3
+    private let practiceBatchIndexKey = "practiceBatchIndex"
+    private let practiceLessonTemplates: [(title: String, content: String, category: String, difficulty: String, quizQuestion: String, quizOptions: [String], quizCorrectIndex: Int)] = [
+        ("SwiftUI State Deep Dive", "Use @State for local changes, @Binding for shared edits, and @ObservedObject for model-driven updates.", "Tech", "intermediate", "Which property wrapper is primarily for local view state?", ["@Binding", "@ObservedObject", "@State", "@EnvironmentObject"], 2),
+        ("Git Rebase Basics", "Rebase rewrites commit history to keep a clean linear timeline. Use it before merging feature branches.", "Tech", "intermediate", "What is the main purpose of git rebase in this lesson?", ["Delete old commits", "Rewrite history into a cleaner linear sequence", "Create a remote branch", "Stash local changes"], 1),
+        ("API Error Handling", "Handle network errors by separating transport failures, server responses, and decoding issues.", "Tech", "advanced", "Which approach best matches robust API error handling?", ["Use one generic error for all failures", "Ignore decoding errors", "Separate transport, server, and decoding errors", "Retry forever without checks"], 2),
+        ("Time Blocking", "Reserve focused blocks in your calendar and protect them from meetings for better deep work.", "Productivity", "beginner", "What is the key action in time blocking?", ["Work without a plan", "Reserve protected focus slots on your calendar", "Only do short tasks", "Always multitask"], 1),
+        ("Task Batching", "Group similar tasks together to reduce context switching and improve execution speed.", "Productivity", "intermediate", "Task batching mainly helps by reducing what?", ["Deadlines", "Creativity", "Context switching", "Calendar events"], 2),
+        ("Weekly Review Ritual", "Review wins, blockers, and priorities each week to align tasks with long-term goals.", "Productivity", "advanced", "Why do a weekly review ritual?", ["To add more meetings", "To align priorities with long-term goals", "To avoid planning", "To archive all tasks"], 1),
+        ("Memory Anchoring", "Connect new information to familiar concepts to improve long-term retention.", "General Knowledge", "beginner", "Memory anchoring improves retention by doing what?", ["Repeating randomly", "Connecting new ideas to familiar concepts", "Studying only at night", "Skipping recall"], 1),
+        ("Decision Fatigue", "Repeated choices reduce mental energy; simplify routine decisions to preserve focus.", "General Knowledge", "intermediate", "What does decision fatigue reduce over time?", ["Screen brightness", "Mental energy for choices", "Internet speed", "Working hours"], 1),
+        ("Probability in Daily Life", "Use base rates and expected outcomes to make more rational everyday decisions.", "General Knowledge", "advanced", "Which concept supports more rational everyday decisions in this lesson?", ["Base rates and expected outcomes", "Pure intuition only", "Ignoring probabilities", "Random guessing"], 0)
+    ]
     
     private init() {}
     
@@ -286,7 +299,14 @@ final class DataStore: ObservableObject {
     }
     
     private func updateProgress() {
-        let completed = lessons.filter(\.isCompleted).count
+        var completed = lessons.filter(\.isCompleted).count
+
+        if appendPracticeBatchIfNeeded(completedCount: completed) {
+            fetchLessons()
+            fetchQuizzes()
+            completed = lessons.filter(\.isCompleted).count
+        }
+
         let streak = calculateStreak()
         let request: NSFetchRequest<ProgressEntity> = NSFetchRequest(entityName: "ProgressEntity")
         
@@ -301,6 +321,47 @@ final class DataStore: ObservableObject {
         } catch {
             print("Update progress error: \(error)")
         }
+    }
+
+    private func appendPracticeBatchIfNeeded(completedCount: Int) -> Bool {
+        guard !lessons.isEmpty, completedCount == lessons.count else {
+            return false
+        }
+
+        let startBatchIndex = UserDefaults.standard.integer(forKey: practiceBatchIndexKey)
+        let templateCount = practiceLessonTemplates.count
+        guard templateCount > 0 else { return false }
+
+        let maxOrder = lessons.map(\.order).max() ?? 0
+        let startTemplate = (startBatchIndex * practiceBatchSize) % templateCount
+
+        for offset in 0..<practiceBatchSize {
+            let template = practiceLessonTemplates[(startTemplate + offset) % templateCount]
+            let lessonId = UUID()
+
+            let entity = LessonEntity(context: stack.context)
+            entity.id = lessonId
+            entity.title = template.title
+            entity.content = template.content
+            entity.category = template.category
+            entity.isCompleted = false
+            entity.order = Int32(maxOrder + offset + 1)
+            entity.isSaved = false
+            entity.difficulty = template.difficulty
+            entity.completionDate = nil
+
+            let quizEntity = QuizEntity(context: stack.context)
+            quizEntity.id = UUID()
+            quizEntity.lessonId = lessonId
+            quizEntity.question = template.quizQuestion
+            quizEntity.options = template.quizOptions
+            quizEntity.correctAnswerIndex = Int32(template.quizCorrectIndex)
+        }
+
+        UserDefaults.standard.set(startBatchIndex + 1, forKey: practiceBatchIndexKey)
+        stack.save()
+        print("[DataStore] Added \(practiceBatchSize) new practice lessons.")
+        return true
     }
     
     // MARK: - Saved Lessons

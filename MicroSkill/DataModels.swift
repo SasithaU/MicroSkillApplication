@@ -20,6 +20,16 @@ struct Quiz: Identifiable, Codable {
     var correctAnswerIndex: Int
 }
 
+struct CategoryMasteryQuiz: Identifiable, Codable {
+    var id = UUID()
+    var category: String
+    var question: String
+    var options: [String]
+    var correctAnswerIndex: Int
+    var createdAt: Date = Date()
+    var isUsed: Bool = false
+}
+
 struct UserProgress: Codable {
     var completedLessons: Int = 0
     var streak: Int = 0

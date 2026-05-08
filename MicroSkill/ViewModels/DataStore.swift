@@ -9,12 +9,26 @@ final class DataStore: ObservableObject {
     
     @Published var lessons: [Lesson] = []
     @Published var quizzes: [Quiz] = []
+    @Published var categoryMasteryQuizzes: [CategoryMasteryQuiz] = []
     @Published var progress: UserProgress = UserProgress()
     
     private let stack = CoreDataStack.shared
     private var isLoaded = false
     private let practiceBatchSize = 3
     private let practiceBatchIndexKey = "practiceBatchIndex"
+    private let maxCategoryMasteryQuizzes = 10
+    private let quizRenewalIntervalDays = 7 // Renew quizzes every week
+    private let categoryMasteryQuizTemplates: [(category: String, question: String, options: [String], correctIndex: Int)] = [
+        ("Tech", "What is the primary purpose of SwiftUI's @State property wrapper?", ["Managing app-wide state", "Managing local view state", "Handling network requests", "Storing user preferences"], 1),
+        ("Tech", "Which Git command helps maintain a clean linear commit history?", ["git merge", "git rebase", "git stash", "git cherry-pick"], 1),
+        ("Tech", "What's the best approach for robust API error handling?", ["Ignore all errors", "Use generic error messages", "Separate transport, server, and decoding errors", "Retry indefinitely"], 2),
+        ("Productivity", "What is the key principle of time blocking?", ["Working without breaks", "Reserving protected focus slots on calendar", "Multitasking constantly", "Only doing urgent tasks"], 1),
+        ("Productivity", "How does task batching primarily improve productivity?", ["By increasing deadlines", "By reducing context switching", "By adding more meetings", "By working longer hours"], 1),
+        ("Productivity", "What's the main benefit of a weekly review ritual?", ["Adding more meetings", "Aligning priorities with long-term goals", "Avoiding all planning", "Archiving completed tasks"], 1),
+        ("General Knowledge", "Memory anchoring improves retention by connecting new information to what?", ["Random facts", "Familiar concepts", "Unrelated topics", "Visual images only"], 1),
+        ("General Knowledge", "What does decision fatigue primarily reduce?", ["Screen brightness", "Mental energy for choices", "Internet speed", "Working hours"], 1),
+        ("General Knowledge", "Which concept supports more rational everyday decisions?", ["Pure intuition", "Base rates and expected outcomes", "Random guessing", "Ignoring probabilities"], 1)
+    ]
     private let practiceLessonTemplates: [(title: String, content: String, category: String, difficulty: String, quizQuestion: String, quizOptions: [String], quizCorrectIndex: Int)] = [
         ("SwiftUI State Deep Dive", "Use @State for local changes, @Binding for shared edits, and @ObservedObject for model-driven updates.", "Tech", "intermediate", "Which property wrapper is primarily for local view state?", ["@Binding", "@ObservedObject", "@State", "@EnvironmentObject"], 2),
         ("Git Rebase Basics", "Rebase rewrites commit history to keep a clean linear timeline. Use it before merging feature branches.", "Tech", "intermediate", "What is the main purpose of git rebase in this lesson?", ["Delete old commits", "Rewrite history into a cleaner linear sequence", "Create a remote branch", "Stash local changes"], 1),
@@ -60,8 +74,11 @@ final class DataStore: ObservableObject {
         updateProgress()
         refreshWidget()
         
+        // Generate category mastery quizzes if needed
+        generateCategoryMasteryQuizzesIfNeeded()
+        
         // Verify data loaded
-        print("[DataStore] Loaded \(lessons.count) lessons, \(quizzes.count) quizzes")
+        print("[DataStore] Loaded \(lessons.count) lessons, \(quizzes.count) quizzes, \(categoryMasteryQuizzes.count) category mastery quizzes")
     }
     
     private func storeHasDifficultyField() -> Bool {
@@ -80,7 +97,7 @@ final class DataStore: ObservableObject {
     }
     
     private func resetAllData() {
-        let entities = ["LessonEntity", "QuizEntity", "ProgressEntity"]
+        let entities = ["LessonEntity", "QuizEntity", "ProgressEntity", "CategoryMasteryQuizEntity"]
         for entityName in entities {
             let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
@@ -132,6 +149,7 @@ final class DataStore: ObservableObject {
     private func fetchAll() {
         fetchLessons()
         fetchQuizzes()
+        fetchCategoryMasteryQuizzes()
         fetchProgress()
     }
     
@@ -179,6 +197,29 @@ final class DataStore: ObservableObject {
         }
     }
     
+    private func fetchCategoryMasteryQuizzes() {
+        let request: NSFetchRequest<CategoryMasteryQuizEntity> = NSFetchRequest(entityName: "CategoryMasteryQuizEntity")
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        
+        do {
+            let entities = try stack.context.fetch(request)
+            categoryMasteryQuizzes = entities.map {
+                CategoryMasteryQuiz(
+                    id: $0.id,
+                    category: $0.category,
+                    question: $0.question,
+                    options: $0.options,
+                    correctAnswerIndex: Int($0.correctAnswerIndex),
+                    createdAt: $0.createdAt,
+                    isUsed: $0.isUsed
+                )
+            }
+            print("[DataStore] Fetched \(categoryMasteryQuizzes.count) category mastery quizzes")
+        } catch {
+            print("Fetch category mastery quizzes error: \(error)")
+        }
+    }
+    
     private func fetchProgress() {
         let request: NSFetchRequest<ProgressEntity> = NSFetchRequest(entityName: "ProgressEntity")
         
@@ -206,6 +247,81 @@ final class DataStore: ObservableObject {
     
     func quizForLesson(_ lessonId: UUID) -> Quiz? {
         quizzes.first { $0.lessonId == lessonId }
+    }
+    
+    func getCategoryMasteryQuizzes(for category: String) -> [CategoryMasteryQuiz] {
+        return categoryMasteryQuizzes.filter { $0.category == category && !$0.isUsed }
+    }
+    
+    func generateCategoryMasteryQuizzesIfNeeded() {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Check if we need to renew quizzes (either too few or too old)
+        let needsRenewal = categoryMasteryQuizzes.isEmpty || 
+            categoryMasteryQuizzes.allSatisfy { 
+                calendar.dateComponents([.day], from: $0.createdAt, to: now).day ?? 0 >= quizRenewalIntervalDays 
+            }
+        
+        if needsRenewal {
+            renewCategoryMasteryQuizzes()
+        }
+    }
+    
+    private func renewCategoryMasteryQuizzes() {
+        // Clear old quizzes
+        clearOldCategoryMasteryQuizzes()
+        
+        // Generate new quizzes
+        let categories = ["Tech", "Productivity", "General Knowledge"]
+        
+        for category in categories {
+            let categoryTemplates = categoryMasteryQuizTemplates.filter { $0.category == category }
+            let quizzesPerCategory = min(maxCategoryMasteryQuizzes / categories.count, categoryTemplates.count)
+            
+            for i in 0..<quizzesPerCategory {
+                let template = categoryTemplates[i]
+                let entity = CategoryMasteryQuizEntity(context: stack.context)
+                entity.id = UUID()
+                entity.category = template.category
+                entity.question = template.question
+                entity.options = template.options
+                entity.correctAnswerIndex = Int32(template.correctIndex)
+                entity.createdAt = Date()
+                entity.isUsed = false
+            }
+        }
+        
+        stack.save()
+        fetchCategoryMasteryQuizzes()
+        print("[DataStore] Generated \(categoryMasteryQuizzes.count) new category mastery quizzes")
+    }
+    
+    private func clearOldCategoryMasteryQuizzes() {
+        let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "CategoryMasteryQuizEntity")
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+        
+        do {
+            try stack.context.execute(deleteRequest)
+            print("[DataStore] Cleared old category mastery quizzes")
+        } catch {
+            print("Clear category mastery quizzes error: \(error)")
+        }
+    }
+    
+    func markCategoryMasteryQuizUsed(_ quiz: CategoryMasteryQuiz) {
+        let request: NSFetchRequest<CategoryMasteryQuizEntity> = NSFetchRequest(entityName: "CategoryMasteryQuizEntity")
+        request.predicate = NSPredicate(format: "id == %@", quiz.id as CVarArg)
+        
+        do {
+            if let entity = try stack.context.fetch(request).first {
+                entity.isUsed = true
+                stack.save()
+                fetchCategoryMasteryQuizzes()
+            }
+        } catch {
+            print("Mark category mastery quiz used error: \(error)")
+        }
     }
     
     func nextLesson(after lesson: Lesson) -> Lesson? {

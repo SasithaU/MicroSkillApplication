@@ -26,57 +26,54 @@ struct LearningPathView: View {
                     
                     // Overall Progress
                     VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text("Overall Progress")
-                            .font(Theme.headline())
-                        Spacer()
-                        Text("\(Int(overallProgress * 100))%")
-                            .font(Theme.headline())
-                            .foregroundStyle(Theme.primary)
+                        HStack {
+                            Text("Overall Progress")
+                                .font(Theme.headline())
+                            Spacer()
+                            Text("\(Int(overallProgress * 100))%")
+                                .font(Theme.headline())
+                                .foregroundStyle(Theme.primary)
+                        }
+                        
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.secondary.opacity(0.15))
+                                    .frame(height: 12)
+                                
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Theme.primary)
+                                    .frame(width: geo.size.width * overallProgress, height: 12)
+                                    .animation(.snappy(duration: 0.6), value: overallProgress)
+                            }
+                        }
+                        .frame(height: 12)
                     }
+                    .cardStyle()
                     
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.secondary.opacity(0.15))
-                                .frame(height: 12)
+                    // Lesson Nodes
+                    VStack(spacing: 0) {
+                        ForEach(Array(store.lessons.enumerated()), id: \.element.id) { index, lesson in
+                            let unlocked = store.isLessonUnlocked(lesson)
+                            let isLast = index == store.lessons.count - 1
                             
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Theme.primary)
-                                .frame(width: geo.size.width * overallProgress, height: 12)
-                                .animation(.snappy(duration: 0.6), value: overallProgress)
+                            LessonNodeView(
+                                lesson: lesson,
+                                index: index,
+                                isUnlocked: unlocked,
+                                isLast: isLast
+                            )
                         }
                     }
-                    .frame(height: 12)
+                    
+                    Spacer(minLength: 40)
                 }
-                .cardStyle()
-                
-                // Lesson Nodes
-                VStack(spacing: 0) {
-                    ForEach(Array(store.lessons.enumerated()), id: \.element.id) { index, lesson in
-                        let unlocked = store.isLessonUnlocked(lesson)
-                        let isLast = index == store.lessons.count - 1
-                        
-                        LessonNodeView(
-                            lesson: lesson,
-                            index: index,
-                            isUnlocked: unlocked,
-                            isLast: isLast
-                        )
-                    }
-                }
-                
-                Spacer(minLength: 40)
+                .padding(.horizontal, Theme.padding)
+                .padding(.top, 8)
             }
-            .padding(.horizontal, Theme.padding)
-            .padding(.top, 8)
-        }
             .background(Theme.background.ignoresSafeArea())
             .navigationTitle("Learning Path")
             .navigationBarTitleDisplayMode(.large)
-            .navigationDestination(for: Lesson.self) { selectedLesson in
-                LessonDetailView(lesson: selectedLesson)
-            }
         }
     }
 }
@@ -95,21 +92,14 @@ struct LessonNodeView: View {
         HStack(alignment: .top, spacing: 16) {
             // Timeline column
             VStack(spacing: 0) {
-                // Node circle
-                ZStack {
-                    Circle()
-                        .fill(nodeBackground)
-                        .frame(width: 48, height: 48)
-                    
-                    Circle()
-                        .stroke(nodeStrokeColor, lineWidth: 3)
-                        .frame(width: 48, height: 48)
-                    
-                    nodeIcon
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(nodeIconColor)
+                if isUnlocked && !lesson.isCompleted {
+                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                        nodeCircle
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    nodeCircle
                 }
-                .frame(width: 48, height: 48)
                 
                 // Connector line to next node
                 if !isLast {
@@ -122,57 +112,92 @@ struct LessonNodeView: View {
             .frame(width: 48)
             
             // Card
-            if isUnlocked {
-                NavigationLink(value: lesson) {
+            if isUnlocked && !lesson.isCompleted {
+                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
                     lessonCard
                 }
                 .buttonStyle(.plain)
             } else {
                 lessonCard
-                    .opacity(0.5)
+                    .opacity(isUnlocked ? 1.0 : 0.5)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private var lessonCard: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(lesson.category)
-                    .font(Theme.caption())
-                    .foregroundColor(isUnlocked ? Theme.primary : .secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(isUnlocked ? Theme.primary.opacity(0.12) : Color.secondary.opacity(0.1))
-                    .clipShape(Capsule())
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(lesson.category)
+                        .font(Theme.caption())
+                        .foregroundColor(isUnlocked ? Theme.primary : .secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(isUnlocked ? Theme.primary.opacity(0.12) : Color.secondary.opacity(0.1))
+                        .clipShape(Capsule())
+                    
+                    Text(lesson.title)
+                        .font(Theme.headline())
+                        .foregroundColor(.primary)
+                    
+                    Text(lesson.content)
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
                 
-                Text(lesson.title)
-                    .font(Theme.headline())
-                    .foregroundColor(.primary)
+                Spacer()
                 
-                Text(lesson.content)
-                    .font(Theme.body())
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                if lesson.isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Theme.success)
+                        .font(.title3)
+                } else if !isUnlocked {
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(Theme.primary)
+                        .font(.caption)
+                }
             }
             
-            Spacer()
-            
-            if lesson.isCompleted {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Theme.success)
-                    .font(.title3)
-            } else if !isUnlocked {
-                Image(systemName: "lock.fill")
-                    .foregroundColor(.secondary)
-                    .font(.title3)
-            } else {
-                Image(systemName: "chevron.right")
-                    .foregroundColor(Theme.primary)
-                    .font(.caption)
+            if isUnlocked && !lesson.isCompleted {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Image(systemName: "play.circle.fill")
+                        Text("Proceed to Lesson")
+                    }
+                    .font(Theme.caption().bold())
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Theme.primary)
+                    .clipShape(Capsule())
+                }
             }
         }
         .cardStyle()
+    }
+    
+    private var nodeCircle: some View {
+        ZStack {
+            Circle()
+                .fill(nodeBackground)
+                .frame(width: 48, height: 48)
+            
+            Circle()
+                .stroke(nodeStrokeColor, lineWidth: 3)
+                .frame(width: 48, height: 48)
+            
+            nodeIcon
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(nodeIconColor)
+        }
+        .frame(width: 48, height: 48)
     }
     
     // MARK: - Node Styling
@@ -209,11 +234,11 @@ struct LessonNodeView: View {
     
     private var nodeIcon: some View {
         if lesson.isCompleted {
-            return Image(systemName: "checkmark")
+            Image(systemName: "checkmark")
         } else if isUnlocked {
-            return Image(systemName: "\(index + 1).circle")
+            Image(systemName: "\(index + 1).circle")
         } else {
-            return Image(systemName: "lock")
+            Image(systemName: "lock")
         }
     }
     

@@ -106,7 +106,44 @@ final class CoreDataStack {
         
         progressEntity.properties = [progressCompleted, progressStreak, progressLastLesson]
         
-        model.entities = [lessonEntity, quizEntity, progressEntity]
+        // CategoryMasteryQuizEntity
+        let categoryMasteryQuizEntity = NSEntityDescription()
+        categoryMasteryQuizEntity.name = "CategoryMasteryQuizEntity"
+        categoryMasteryQuizEntity.managedObjectClassName = "CategoryMasteryQuizEntity"
+        
+        let categoryMasteryQuizId = NSAttributeDescription()
+        categoryMasteryQuizId.name = "id"
+        categoryMasteryQuizId.attributeType = .UUIDAttributeType
+        
+        let categoryMasteryQuizCategory = NSAttributeDescription()
+        categoryMasteryQuizCategory.name = "category"
+        categoryMasteryQuizCategory.attributeType = .stringAttributeType
+        
+        let categoryMasteryQuizQuestion = NSAttributeDescription()
+        categoryMasteryQuizQuestion.name = "question"
+        categoryMasteryQuizQuestion.attributeType = .stringAttributeType
+        
+        let categoryMasteryQuizOptions = NSAttributeDescription()
+        categoryMasteryQuizOptions.name = "options"
+        categoryMasteryQuizOptions.attributeType = .transformableAttributeType
+        categoryMasteryQuizOptions.valueTransformerName = NSValueTransformerName.secureUnarchiveFromDataTransformerName.rawValue
+        
+        let categoryMasteryQuizCorrectIndex = NSAttributeDescription()
+        categoryMasteryQuizCorrectIndex.name = "correctAnswerIndex"
+        categoryMasteryQuizCorrectIndex.attributeType = .integer32AttributeType
+        
+        let categoryMasteryQuizCreatedAt = NSAttributeDescription()
+        categoryMasteryQuizCreatedAt.name = "createdAt"
+        categoryMasteryQuizCreatedAt.attributeType = .dateAttributeType
+        
+        let categoryMasteryQuizIsUsed = NSAttributeDescription()
+        categoryMasteryQuizIsUsed.name = "isUsed"
+        categoryMasteryQuizIsUsed.attributeType = .booleanAttributeType
+        categoryMasteryQuizIsUsed.defaultValue = false
+        
+        categoryMasteryQuizEntity.properties = [categoryMasteryQuizId, categoryMasteryQuizCategory, categoryMasteryQuizQuestion, categoryMasteryQuizOptions, categoryMasteryQuizCorrectIndex, categoryMasteryQuizCreatedAt, categoryMasteryQuizIsUsed]
+        
+        model.entities = [lessonEntity, quizEntity, progressEntity, categoryMasteryQuizEntity]
         
         persistentContainer = NSPersistentContainer(name: "MicroSkill", managedObjectModel: model)
         persistentContainer.loadPersistentStores { _, error in
@@ -161,4 +198,15 @@ public class ProgressEntity: NSManagedObject {
     @NSManaged public var completedLessons: Int32
     @NSManaged public var streak: Int32
     @NSManaged public var lastLessonId: UUID?
+}
+
+@objc(CategoryMasteryQuizEntity)
+public class CategoryMasteryQuizEntity: NSManagedObject {
+    @NSManaged public var id: UUID
+    @NSManaged public var category: String
+    @NSManaged public var question: String
+    @NSManaged public var options: [String]
+    @NSManaged public var correctAnswerIndex: Int32
+    @NSManaged public var createdAt: Date
+    @NSManaged public var isUsed: Bool
 }

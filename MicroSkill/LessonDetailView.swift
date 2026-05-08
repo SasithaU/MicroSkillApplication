@@ -28,7 +28,7 @@ struct LessonDetailView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(Theme.primary.opacity(0.12))
-                            .cornerRadius(8)
+                            .clipShape(Capsule())
                         
                         // Difficulty Badge
                         Text(lesson.difficulty.capitalized)
@@ -37,7 +37,7 @@ struct LessonDetailView: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(difficultyColor(lesson.difficulty).opacity(0.12))
-                            .cornerRadius(8)
+                            .clipShape(Capsule())
                         
                         Spacer()
                         
@@ -65,7 +65,7 @@ struct LessonDetailView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(Theme.success.opacity(0.12))
-                            .cornerRadius(8)
+                            .clipShape(Capsule())
                         }
                     }
                     
@@ -90,9 +90,9 @@ struct LessonDetailView: View {
                         }
                         .padding()
                         .background(Theme.accent.opacity(0.08))
-                        .cornerRadius(Theme.cardCornerRadius)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
                                 .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
                         )
                     }
@@ -100,7 +100,7 @@ struct LessonDetailView: View {
                     // Title
                     Text(lesson.title)
                         .font(Theme.title())
-                        .foregroundStyle(Theme.primary)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // Content Card
@@ -114,7 +114,6 @@ struct LessonDetailView: View {
                             .foregroundColor(.secondary)
                             .lineSpacing(4)
                     }
-                    .padding()
                     .cardStyle()
                     
                     // Action Buttons
@@ -131,9 +130,9 @@ struct LessonDetailView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Theme.heroGradient)
+                                .background(Theme.primary)
                                 .foregroundColor(.white)
-                                .cornerRadius(Theme.cardCornerRadius)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Start quiz for \(lesson.title)")
@@ -152,7 +151,7 @@ struct LessonDetailView: View {
                             .padding()
                             .background(Theme.success.opacity(0.15))
                             .foregroundStyle(Theme.success)
-                            .cornerRadius(Theme.cardCornerRadius)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Mark \(lesson.title) as completed")
@@ -171,7 +170,7 @@ struct LessonDetailView: View {
                                 .padding()
                                 .background(Theme.primary.opacity(0.1))
                                 .foregroundStyle(Theme.primary)
-                                .cornerRadius(Theme.cardCornerRadius)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Next lesson: \(next.title)")
@@ -179,14 +178,13 @@ struct LessonDetailView: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "star.circle.fill")
                                     .font(.largeTitle)
-                                    .foregroundStyle(Theme.heroGradient)
+                                    .foregroundStyle(Theme.primary)
                                 
                                 Text("All lessons completed!")
                                     .font(Theme.headline())
                                     .foregroundColor(.primary)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding()
                             .cardStyle()
                         }
                     }

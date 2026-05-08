@@ -42,14 +42,13 @@ struct LearningPathView: View {
                                 .frame(height: 12)
                             
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Theme.heroGradient)
+                                .fill(Theme.primary)
                                 .frame(width: geo.size.width * overallProgress, height: 12)
-                                .animation(.easeInOut(duration: 0.6), value: overallProgress)
+                                .animation(.snappy(duration: 0.6), value: overallProgress)
                         }
                     }
                     .frame(height: 12)
                 }
-                .padding()
                 .cardStyle()
                 
                 // Lesson Nodes
@@ -145,7 +144,7 @@ struct LessonNodeView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(isUnlocked ? Theme.primary.opacity(0.12) : Color.secondary.opacity(0.1))
-                    .cornerRadius(6)
+                    .clipShape(Capsule())
                 
                 Text(lesson.title)
                     .font(Theme.headline())
@@ -173,13 +172,7 @@ struct LessonNodeView: View {
                     .font(.caption)
             }
         }
-        .padding()
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cardCornerRadius)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                .stroke(lesson.isCompleted ? Theme.success.opacity(0.3) : isUnlocked ? Theme.primary.opacity(0.15) : Color.secondary.opacity(0.1), lineWidth: 1.5)
-        )
+        .cardStyle()
     }
     
     // MARK: - Node Styling

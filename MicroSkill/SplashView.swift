@@ -20,13 +20,13 @@ struct SplashView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 72, height: 72)
-                        .foregroundStyle(Theme.heroGradient)
+                        .foregroundStyle(Theme.primary)
                         .accessibilityLabel("Book icon")
                 }
                 
                 Text("MicroSkill")
                     .font(Theme.largeTitle())
-                    .foregroundStyle(Theme.primary)
+                    .foregroundColor(.primary)
                     .accessibilityLabel("Micro Skill app")
                 
                 Text("Learn something new every day")

@@ -11,7 +11,7 @@ struct LessonListView: View {
     var body: some View {
         if filteredLessons.isEmpty {
             // Show empty state
-            List {
+            ScrollView {
                 VStack(spacing: 16) {
                     Spacer(minLength: 40)
                     
@@ -35,30 +35,43 @@ struct LessonListView: View {
                     Spacer(minLength: 40)
                 }
                 .frame(maxWidth: .infinity)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                .padding(.horizontal, Theme.padding)
             }
-            .listStyle(.plain)
+            .background(Theme.background.ignoresSafeArea())
             .navigationTitle(category)
         } else {
-            List(filteredLessons) { lesson in
-                let unlocked = store.isLessonUnlocked(lesson)
-                
-                if unlocked {
-                    NavigationLink(destination: LessonDetailView(lesson: lesson)) {
-                        lessonRow(lesson: lesson, unlocked: true)
+            ScrollView {
+                VStack(spacing: Theme.spacing) {
+                    ForEach(filteredLessons) { lesson in
+                        let unlocked = store.isLessonUnlocked(lesson)
+                        
+                        if unlocked {
+                            NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                                lessonRow(lesson: lesson, unlocked: true)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            lessonRow(lesson: lesson, unlocked: false)
+                        }
                     }
-                } else {
-                    lessonRow(lesson: lesson, unlocked: false)
+                    
+                    Spacer(minLength: 40)
                 }
+                .padding(.horizontal, Theme.padding)
+                .padding(.top, 8)
             }
+            .background(Theme.background.ignoresSafeArea())
             .navigationTitle(category)
         }
     }
     
     private func lessonRow(lesson: Lesson, unlocked: Bool) -> some View {
-        HStack {
+        HStack(spacing: 12) {
+            IconTile(
+                systemName: lesson.isCompleted ? "checkmark.circle.fill" : unlocked ? "book.fill" : "lock.fill",
+                color: lesson.isCompleted ? Theme.success : unlocked ? Theme.primary : .secondary
+            )
+            
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(lesson.title)
@@ -72,7 +85,7 @@ struct LessonListView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(difficultyColor(lesson.difficulty).opacity(0.12))
-                        .cornerRadius(4)
+                        .clipShape(Capsule())
                 }
                 
                 Text(lesson.content)
@@ -81,17 +94,12 @@ struct LessonListView: View {
                     .lineLimit(2)
             }
             Spacer()
-            if lesson.isCompleted {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Theme.success)
-                    .font(.title3)
-            } else if !unlocked {
-                Image(systemName: "lock.fill")
-                    .foregroundColor(.secondary)
-                    .font(.title3)
-            }
+            
+            Image(systemName: unlocked ? "chevron.right" : "lock.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        .cardStyle()
         .opacity(unlocked ? 1.0 : 0.6)
     }
     

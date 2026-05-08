@@ -31,24 +31,21 @@ struct HomeView: View {
                 ScrollView {
                     VStack(spacing: Theme.spacing * 1.5) {
                         // Greeting Header
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(greeting)
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
-                                .textCase(.uppercase)
-                            
-                            Text(userName)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("\(greeting), \(userName)")
                                 .font(Theme.largeTitle())
-                                .foregroundStyle(Theme.primary)
+                                .foregroundColor(.primary)
+                            
+                            Text("Your next small skill is ready.")
+                                .font(Theme.body())
+                                .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
                         
                         // Streak Card
                         HStack(spacing: 12) {
-                            Image(systemName: "flame.fill")
-                                .font(.title2)
-                                .foregroundStyle(Theme.accent)
+                            IconTile(systemName: "flame.fill", color: .orange)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(store.progress.streak) Day Streak")
@@ -62,15 +59,7 @@ struct HomeView: View {
                             
                             Spacer()
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                .fill(Theme.accent.opacity(0.08))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
-                        )
+                        .cardStyle()
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("\(store.progress.streak) day learning streak. Keep it up!")
                         
@@ -94,9 +83,9 @@ struct HomeView: View {
                                         .frame(height: 12)
                                     
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(Theme.heroGradient)
+                                        .fill(Theme.primary)
                                         .frame(width: geo.size.width * progressValue, height: 12)
-                                        .animation(.easeInOut(duration: 0.6), value: progressValue)
+                                        .animation(.snappy(duration: 0.6), value: progressValue)
                                 }
                             }
                             .frame(height: 12)
@@ -105,15 +94,12 @@ struct HomeView: View {
                                 .font(Theme.caption())
                                 .foregroundColor(.secondary)
                         }
-                        .padding()
                         .cardStyle()
                         
                         // View Learning Path
                         NavigationLink(destination: LearningPathView()) {
                             HStack(spacing: 12) {
-                                Image(systemName: "signpost.right.fill")
-                                    .font(.title3)
-                                    .foregroundStyle(Theme.primary)
+                                IconTile(systemName: "signpost.right.fill", color: Theme.primary)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("View Learning Path")
@@ -130,7 +116,6 @@ struct HomeView: View {
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.secondary)
                             }
-                            .padding()
                             .cardStyle()
                         }
                         .buttonStyle(.plain)
@@ -139,9 +124,7 @@ struct HomeView: View {
                         // Personalized Recommendation from LearningModel
                         let recommendation = LearningModel.shared.personalizedRecommendation()
                         HStack(spacing: 12) {
-                            Image(systemName: "sparkles")
-                                .font(.title3)
-                                .foregroundStyle(Theme.heroGradient)
+                            IconTile(systemName: "sparkles", color: Theme.accent)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Personalized Tip")
@@ -156,23 +139,13 @@ struct HomeView: View {
                             
                             Spacer()
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                .fill(Theme.primary.opacity(0.06))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
-                        )
+                        .cardStyle()
                         .accessibilityLabel("Personalized tip: \(recommendation)")
                         
                         // Recommended Category
                         let recommendedCategory = LearningModel.shared.recommendedNextCategory()
                         HStack(spacing: 12) {
-                            Image(systemName: "arrow.right.circle.fill")
-                                .font(.title3)
-                                .foregroundStyle(Theme.primary)
+                            IconTile(systemName: "arrow.right.circle.fill", color: Theme.primary)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Recommended Focus")
@@ -187,7 +160,6 @@ struct HomeView: View {
                             
                             Spacer()
                         }
-                        .padding()
                         .cardStyle()
                         .accessibilityLabel("Recommended focus category: \(recommendedCategory)")
                         
@@ -216,7 +188,7 @@ struct HomeView: View {
                                                     .padding(.horizontal, 10)
                                                     .padding(.vertical, 4)
                                                     .background(Theme.primary.opacity(0.12))
-                                                    .cornerRadius(8)
+                                                    .clipShape(Capsule())
                                                 
                                                 Spacer()
                                                 
@@ -236,20 +208,14 @@ struct HomeView: View {
                                             
                                             HStack(spacing: 4) {
                                                 Image(systemName: "location.circle.fill")
-                                                    .foregroundStyle(Theme.heroGradient)
+                                                    .foregroundStyle(Theme.primary)
                                                 Text("Start Now")
                                                     .font(Theme.caption())
                                                     .foregroundStyle(Theme.primary)
                                             }
                                             .padding(.top, 4)
                                         }
-                                        .padding()
-                                        .background(Theme.cardBackground)
-                                        .cornerRadius(Theme.cardCornerRadius)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                                .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
-                                        )
+                                        .cardStyle()
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityLabel("Context recommendation: \(lesson.title) in \(lesson.category) for \(context). Start now.")
@@ -272,7 +238,7 @@ struct HomeView: View {
                                                 .padding(.horizontal, 10)
                                                 .padding(.vertical, 4)
                                                 .background(Theme.primary.opacity(0.12))
-                                                .cornerRadius(8)
+                                                .clipShape(Capsule())
                                             
                                             Spacer()
                                             
@@ -292,20 +258,14 @@ struct HomeView: View {
                                         
                                         HStack(spacing: 4) {
                                             Image(systemName: "play.circle.fill")
-                                                .foregroundStyle(Theme.heroGradient)
+                                                .foregroundStyle(Theme.primary)
                                             Text("Resume")
                                                 .font(Theme.caption())
                                                 .foregroundStyle(Theme.primary)
                                         }
                                         .padding(.top, 4)
                                     }
-                                    .padding()
-                                    .background(Theme.cardBackground)
-                                    .cornerRadius(Theme.cardCornerRadius)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                            .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
-                                    )
+                                    .cardStyle()
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Continue learning: \(lesson.title) in \(lesson.category). Resume lesson.")
@@ -313,15 +273,13 @@ struct HomeView: View {
                         } else {
                             // Show Browse Lessons when all lessons are completed
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("All Lessons Completed! 🎉")
+                                Text("All Lessons Completed")
                                     .font(Theme.headline())
                                 
                                 NavigationLink(destination: CategoriesView()) {
                                     VStack(alignment: .leading, spacing: 8) {
                                         HStack {
-                                            Image(systemName: "book.fill")
-                                                .font(.title3)
-                                                .foregroundStyle(Theme.primary)
+                                            IconTile(systemName: "book.fill", color: Theme.primary)
                                             
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text("Browse All Lessons")
@@ -343,20 +301,14 @@ struct HomeView: View {
                                         
                                         HStack(spacing: 4) {
                                             Image(systemName: "arrow.right.circle.fill")
-                                                .foregroundStyle(Theme.heroGradient)
+                                                .foregroundStyle(Theme.primary)
                                             Text("Explore")
                                                 .font(Theme.caption())
                                                 .foregroundStyle(Theme.primary)
                                         }
                                         .padding(.top, 4)
                                     }
-                                    .padding()
-                                    .background(Theme.cardBackground)
-                                    .cornerRadius(Theme.cardCornerRadius)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                                            .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
-                                    )
+                                    .cardStyle()
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("Browse all lessons. Review completed lessons or explore new topics.")

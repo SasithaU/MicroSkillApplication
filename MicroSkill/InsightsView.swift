@@ -91,7 +91,6 @@ struct InsightsView: View {
                             .foregroundColor(LearningModel.shared.isReadyForAdvanced() ? Theme.success : .secondary)
                     }
                 }
-                .padding()
                 .cardStyle()
                 
                 // NEW: Peak Performance Category
@@ -112,7 +111,6 @@ struct InsightsView: View {
                         Spacer()
                     }
                 }
-                .padding()
                 .cardStyle()
                 
                 // Average Card
@@ -137,7 +135,6 @@ struct InsightsView: View {
                             .foregroundColor(Theme.primary)
                     }
                 }
-                .padding()
                 .cardStyle()
                 
                 // Category Breakdown
@@ -171,7 +168,6 @@ struct InsightsView: View {
                         .frame(height: 8)
                     }
                 }
-                .padding()
                 .cardStyle()
                 
                 Spacer(minLength: 40)
@@ -196,9 +192,7 @@ struct InsightCard: View {
     
     var body: some View {
         VStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 28))
-                .foregroundColor(iconColor)
+            IconTile(systemName: icon, color: iconColor)
             
             Text(value)
                 .font(Theme.headline())
@@ -213,10 +207,8 @@ struct InsightCard: View {
                 .foregroundColor(.secondary.opacity(0.8))
                 .multilineTextAlignment(.center)
         }
-        .padding()
         .frame(maxWidth: .infinity, minHeight: 140)
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cardCornerRadius)
+        .cardStyle()
     }
 }
 
@@ -226,4 +218,3 @@ struct InsightCard: View {
             .environmentObject(DataStore.shared)
     }
 }
-

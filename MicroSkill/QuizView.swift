@@ -60,7 +60,7 @@ struct QuizView: View {
                         .padding()
                         .background(selectedIndex == nil ? Color.secondary.opacity(0.2) : Theme.primary)
                         .foregroundColor(selectedIndex == nil ? .secondary : .white)
-                        .cornerRadius(Theme.cardCornerRadius)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .disabled(selectedIndex == nil)
@@ -147,18 +147,18 @@ struct QuizOptionButton: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
                     .fill(state == .selected ? Theme.primary.opacity(0.08) :
                           state == .correct ? Theme.success.opacity(0.08) :
                           state == .wrong ? Color.red.opacity(0.08) :
                           Theme.cardBackground)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
                     .stroke(state == .selected ? Theme.primary.opacity(0.3) :
                             state == .correct ? Theme.success.opacity(0.4) :
                             state == .wrong ? Color.red.opacity(0.4) :
-                            Color.clear, lineWidth: 1.5)
+                            Theme.separator, lineWidth: 1.0)
             )
         }
         .buttonStyle(.plain)

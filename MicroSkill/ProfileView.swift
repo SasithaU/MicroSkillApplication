@@ -16,11 +16,15 @@ struct ProfileView: View {
                         VStack(spacing: 12) {
                             ZStack {
                                 Circle()
-                                    .fill(Theme.primary.opacity(0.15))
+                                    .fill(.regularMaterial)
                                     .frame(width: 80, height: 80)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Theme.separator, lineWidth: 0.5)
+                                    )
                                 
                                 Text(userName.prefix(1).uppercased())
-                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .font(.system(size: 32, weight: .semibold, design: .default))
                                     .foregroundColor(Theme.primary)
                             }
                             
@@ -70,10 +74,7 @@ struct ProfileView: View {
                         // Settings Link
                         NavigationLink(destination: SettingsView()) {
                             HStack(spacing: 12) {
-                                Image(systemName: "gear")
-                                    .font(.title3)
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 32)
+                                IconTile(systemName: "gearshape.fill", color: .secondary)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Settings")
@@ -91,7 +92,6 @@ struct ProfileView: View {
                                     .foregroundColor(.secondary)
                                     .font(.caption)
                             }
-                            .padding()
                             .cardStyle()
                         }
                         .buttonStyle(.plain)
@@ -113,4 +113,3 @@ struct ProfileView: View {
     ProfileView()
         .environmentObject(DataStore.shared)
 }
-

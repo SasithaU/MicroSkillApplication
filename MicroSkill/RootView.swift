@@ -34,7 +34,7 @@ struct BiometricAuthView: View {
                 
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(Theme.heroGradient)
+                    .foregroundStyle(Theme.primary)
                 
                 Text("Secure Access")
                     .font(Theme.largeTitle())
@@ -65,9 +65,9 @@ struct BiometricAuthView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Theme.heroGradient)
+                    .background(Theme.primary)
                     .foregroundColor(.white)
-                    .cornerRadius(Theme.cardCornerRadius)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, Theme.padding)

@@ -11,12 +11,6 @@ struct CategoriesView: View {
 
                 ScrollView {
                     VStack(spacing: Theme.spacing) {
-                        Text("Browse Topics")
-                            .font(Theme.largeTitle())
-                            .foregroundStyle(Theme.primary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 8)
-
                         ForEach(categories, id: \.self) { category in
                             NavigationLink(destination: LessonListView(category: category)) {
                                 CategoryCard(
@@ -51,9 +45,9 @@ struct CategoriesView: View {
 
     func categoryColor(for category: String) -> Color {
         switch category {
-        case "Tech": return .indigo
-        case "Productivity": return .cyan
-        case "General Knowledge": return .purple
+        case "Tech": return Theme.primary
+        case "Productivity": return Theme.accent
+        case "General Knowledge": return .orange
         default: return .blue
         }
     }
@@ -67,15 +61,7 @@ struct CategoryCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(color.opacity(0.15))
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundStyle(color)
-            }
+            IconTile(systemName: icon, color: color)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(category)
@@ -93,7 +79,6 @@ struct CategoryCard: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundColor(.secondary)
         }
-        .padding()
         .cardStyle()
     }
 }
@@ -101,4 +86,3 @@ struct CategoryCard: View {
 #Preview {
     CategoriesView()
 }
-

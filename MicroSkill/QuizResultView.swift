@@ -57,9 +57,9 @@ struct QuizResultView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Theme.heroGradient)
+                            .background(Theme.primary)
                             .foregroundColor(.white)
-                            .cornerRadius(Theme.cardCornerRadius)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Next lesson: \(next.title)")
@@ -73,9 +73,9 @@ struct QuizResultView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Theme.heroGradient)
+                            .background(Theme.primary)
                             .foregroundColor(.white)
-                            .cornerRadius(Theme.cardCornerRadius)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Back to home dashboard")
@@ -92,7 +92,7 @@ struct QuizResultView: View {
                         .padding()
                         .background(Theme.primary.opacity(0.12))
                         .foregroundStyle(Theme.primary)
-                        .cornerRadius(Theme.cardCornerRadius)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Try quiz again")

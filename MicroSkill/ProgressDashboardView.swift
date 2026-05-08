@@ -99,7 +99,6 @@ struct ProgressDashboardView: View {
                             .padding(.vertical, 8)
                         }
                     }
-                    .padding()
                     .cardStyle()
                     
                     // Overall Progress Ring
@@ -115,14 +114,14 @@ struct ProgressDashboardView: View {
                                 
                                 Circle()
                                     .trim(from: 0, to: CGFloat(min(store.completedLessonsCount, store.totalLessonsCount)) / CGFloat(max(store.totalLessonsCount, 1)))
-                                    .stroke(Theme.heroGradient, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                                    .stroke(Theme.primary, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                                     .frame(width: 100, height: 100)
                                     .rotationEffect(.degrees(-90))
                                     .animation(.easeInOut(duration: 0.8), value: store.completedLessonsCount)
                                 
                                 VStack(spacing: 2) {
                                     Text("\(store.completedLessonsCount)/\(store.totalLessonsCount)")
-                                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                                        .font(.system(size: 18, weight: .bold, design: .default))
                                         .foregroundColor(.primary)
                                     Text("lessons")
                                         .font(.system(size: 11))
@@ -143,14 +142,12 @@ struct ProgressDashboardView: View {
                             Spacer()
                         }
                     }
-                    .padding()
                     .cardStyle()
                     
                     // Navigate to Insights
                     NavigationLink(destination: InsightsView()) {
                         HStack {
-                            Image(systemName: "lightbulb.fill")
-                                .foregroundColor(Theme.accent)
+                            IconTile(systemName: "lightbulb.fill", color: Theme.accent)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Detailed Insights")
@@ -167,7 +164,6 @@ struct ProgressDashboardView: View {
                                 .foregroundColor(.secondary)
                                 .font(.caption)
                         }
-                        .padding()
                         .cardStyle()
                     }
                     .buttonStyle(.plain)
@@ -205,23 +201,19 @@ struct StatCard: View {
         VStack(spacing: 8) {
             HStack {
                 Spacer()
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
+                IconTile(systemName: icon, color: color)
             }
             
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(size: 28, weight: .bold, design: .default))
                 .foregroundColor(.primary)
             
             Text(label)
                 .font(Theme.caption())
                 .foregroundColor(.secondary)
         }
-        .padding()
         .frame(maxWidth: .infinity)
-        .background(Theme.cardBackground)
-        .cornerRadius(Theme.cardCornerRadius)
+        .cardStyle()
     }
 }
 
@@ -229,4 +221,3 @@ struct StatCard: View {
     ProgressDashboardView()
         .environmentObject(DataStore.shared)
 }
-

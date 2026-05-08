@@ -63,6 +63,8 @@ struct SavedLessonRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
+            IconTile(systemName: "bookmark.fill", color: Theme.primary)
+            
             VStack(alignment: .leading, spacing: 6) {
                 Text(lesson.category)
                     .font(Theme.caption())
@@ -70,7 +72,7 @@ struct SavedLessonRow: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(Theme.primary.opacity(0.12))
-                    .cornerRadius(6)
+                    .clipShape(Capsule())
                 
                 Text(lesson.title)
                     .font(Theme.headline())
@@ -93,7 +95,6 @@ struct SavedLessonRow: View {
             }
             .buttonStyle(.plain)
         }
-        .padding()
         .cardStyle()
     }
 }
@@ -102,4 +103,3 @@ struct SavedLessonRow: View {
     SavedView()
         .environmentObject(DataStore.shared)
 }
-

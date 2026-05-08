@@ -45,13 +45,13 @@ struct OnboardingView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 52, height: 52)
-                    .foregroundStyle(Theme.heroGradient)
+                    .foregroundStyle(Theme.primary)
             }
             
             Text("Welcome to\nMicroSkill")
                 .font(Theme.title())
                 .multilineTextAlignment(.center)
-                .foregroundStyle(Theme.primary)
+                .foregroundColor(.primary)
             
             Text("Let's personalize your learning journey")
                 .font(Theme.body())
@@ -70,11 +70,10 @@ struct OnboardingView: View {
             TextField("Enter your name", text: $userName)
                 .font(Theme.body())
                 .padding()
-                .background(Theme.cardBackground)
-                .cornerRadius(Theme.cardCornerRadius)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
-                        .stroke(Theme.primary.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
+                        .stroke(Theme.separator, lineWidth: 0.5)
                 )
         }
     }
@@ -147,7 +146,7 @@ struct GoalButton: View {
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.heroGradient)
+                        .foregroundStyle(Theme.primary)
                         .font(.title3)
                         .transition(.scale.combined(with: .opacity))
                 }
@@ -170,4 +169,3 @@ struct GoalButton: View {
 #Preview {
     OnboardingView()
 }
-

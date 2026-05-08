@@ -55,7 +55,15 @@ struct InsightsView: View {
                         iconColor: Theme.primary,
                         title: "Optimal Time",
                         value: LearningModel.shared.optimalTimeDescription(),
-                        subtitle: "AI-predicted best time"
+                        subtitle: "Personalized best time"
+                    )
+                    
+                    InsightCard(
+                        icon: "cpu.fill",
+                        iconColor: CoreMLLearningPredictor.shared.isModelAvailable ? Theme.success : Theme.accent,
+                        title: "Personalization",
+                        value: CoreMLLearningPredictor.shared.isModelAvailable ? "Core ML" : "Adaptive",
+                        subtitle: CoreMLLearningPredictor.shared.isModelAvailable ? "On-device model" : "Rule-based fallback"
                     )
                     
                     // NEW: Consistency Score

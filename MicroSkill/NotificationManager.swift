@@ -7,18 +7,39 @@ class NotificationManager: ObservableObject {
     
     @Published var isAuthorized = false
     
-    private init() {
-        checkAuthorization()
-        registerNotificationCategories()
+    private enum NotificationID {
+        static let dailyReminder = "daily-reminder"
+        static let contextualReminder = "contextual-reminder"
+        static let testReminder = "test-interactive-reminder"
     }
     
-    func requestAuthorization() {
+    private enum CategoryID {
+        static let dailyReminder = "DAILY_REMINDER"
+    }
+    
+    enum ActionID {
+        static let ok = "OK"
+        static let startLesson = "START_LESSON"
+        static let remindLater = "REMIND_LATER"
+    }
+    
+    private init() {
+        configure()
+    }
+    
+    func configure() {
+        registerNotificationCategories()
+        checkAuthorization()
+    }
+    
+    func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             DispatchQueue.main.async {
                 self.isAuthorized = granted
                 if let error = error {
                     print("Notification auth error: \(error)")
                 }
+                completion?(granted)
             }
         }
     }
@@ -31,30 +52,44 @@ class NotificationManager: ObservableObject {
         }
     }
     
-    private func registerNotificationCategories() {
+    func registerNotificationCategories() {
+        let okAction = UNNotificationAction(
+            identifier: ActionID.ok,
+            title: "OK",
+            options: []
+        )
+        
         let startAction = UNNotificationAction(
-            identifier: "START_LESSON",
+            identifier: ActionID.startLesson,
             title: "Start Lesson",
             options: .foreground
         )
         
         let remindLaterAction = UNNotificationAction(
-            identifier: "REMIND_LATER",
+            identifier: ActionID.remindLater,
             title: "Remind Later",
             options: []
         )
         
         let category = UNNotificationCategory(
-            identifier: "DAILY_REMINDER",
-            actions: [startAction, remindLaterAction],
+            identifier: CategoryID.dailyReminder,
+            actions: [okAction, startAction, remindLaterAction],
             intentIdentifiers: [],
-            options: []
+            options: [.customDismissAction]
         )
         
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
+    func requestAuthorizationAndScheduleDailyReminder(at hour: Int = 9, minute: Int = 0) {
+        requestAuthorization { granted in
+            guard granted else { return }
+            self.scheduleDailyReminder(at: hour, minute: minute)
+        }
+    }
+    
     func scheduleDailyReminder(at hour: Int = 9, minute: Int = 0) {
+        registerNotificationCategories()
         cancelAllNotifications()
         
         let content = UNMutableNotificationContent()
@@ -62,14 +97,14 @@ class NotificationManager: ObservableObject {
         content.body = "Your daily micro-lesson is waiting. Keep that streak going!"
         content.sound = .default
         content.badge = 1
-        content.categoryIdentifier = "DAILY_REMINDER"
+        content.categoryIdentifier = CategoryID.dailyReminder
         
         var dateComponents = DateComponents()
         dateComponents.hour = hour
         dateComponents.minute = minute
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        let request = UNNotificationRequest(identifier: "daily-reminder", content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: NotificationID.dailyReminder, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
@@ -87,8 +122,10 @@ class NotificationManager: ObservableObject {
     }
     
     func scheduleContextualReminder(location: String) {
+        registerNotificationCategories()
+        
         let content = UNMutableNotificationContent()
-        content.categoryIdentifier = "DAILY_REMINDER"
+        content.categoryIdentifier = CategoryID.dailyReminder
         
         switch location {
         case "home":
@@ -109,9 +146,28 @@ class NotificationManager: ObservableObject {
         content.badge = 1
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-        let request = UNNotificationRequest(identifier: "contextual-reminder", content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: NotificationID.contextualReminder, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request)
+    }
+    
+    func scheduleTestInteractiveNotification() {
+        registerNotificationCategories()
+        
+        let content = UNMutableNotificationContent()
+        content.title = "MicroSkill Reminder"
+        content.body = "This is a test notification. Expand it to see OK, Start Lesson, and Remind Later."
+        content.sound = .default
+        content.categoryIdentifier = CategoryID.dailyReminder
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let request = UNNotificationRequest(identifier: NotificationID.testReminder, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule test notification: \(error)")
+            }
+        }
     }
     
     func cancelAllNotifications() {
@@ -120,5 +176,4 @@ class NotificationManager: ObservableObject {
         UIApplication.shared.applicationIconBadgeNumber = 0
     }
 }
-
 

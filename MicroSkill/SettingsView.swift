@@ -32,8 +32,7 @@ struct SettingsView: View {
                 Toggle("Daily Reminders", isOn: $notificationsEnabled)
                     .onChange(of: notificationsEnabled) { _, newValue in
                         if newValue {
-                            notificationManager.requestAuthorization()
-                            notificationManager.scheduleDailyReminder(at: notificationHour, minute: notificationMinute)
+                            notificationManager.requestAuthorizationAndScheduleDailyReminder(at: notificationHour, minute: notificationMinute)
                         } else {
                             notificationManager.cancelAllNotifications()
                         }
@@ -49,6 +48,18 @@ struct SettingsView: View {
                     Text("Notifications are not authorized. Please enable them in Settings.")
                         .font(.caption)
                         .foregroundColor(.orange)
+                }
+                
+                Button("Send Test Notification") {
+                    if notificationManager.isAuthorized {
+                        notificationManager.scheduleTestInteractiveNotification()
+                    } else {
+                        notificationManager.requestAuthorization { granted in
+                            if granted {
+                                notificationManager.scheduleTestInteractiveNotification()
+                            }
+                        }
+                    }
                 }
             }
             
@@ -179,4 +190,3 @@ struct SettingsView: View {
         SettingsView()
     }
 }
-

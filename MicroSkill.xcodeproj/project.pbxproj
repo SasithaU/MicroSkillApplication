@@ -31,8 +31,6 @@
 		00000016 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000016 /* SettingsView.swift */; };
 		00000017 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000017 /* NotificationManager.swift */; };
 		00000018 /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000018 /* BiometricAuthManager.swift */; };
-		00000019 /* MicroSkillWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000019 /* MicroSkillWidget.swift */; };
-		0000001A /* MicroSkillWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000001A /* MicroSkillWidgetBundle.swift */; };
 		0000001B /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001B /* CoreData.framework */; };
 		0000001C /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001C /* Charts.framework */; };
 		0000001D /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001D /* LocalAuthentication.framework */; };
@@ -40,7 +38,23 @@
 		0000001F /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001F /* CoreLocation.framework */; };
 		00000020 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000020 /* LocationManager.swift */; };
 		00000021 /* LearningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000021 /* LearningModel.swift */; };
+		00000022 /* MicroSkillWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000019 /* MicroSkillWidget.swift */; };
+		00000023 /* MicroSkillWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000001A /* MicroSkillWidgetBundle.swift */; };
+		00000024 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1000001E /* WidgetKit.framework */; };
+		00000025 /* MicroSkillWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 20000003 /* MicroSkillWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		00000026 /* CoreMLLearningPredictor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000025 /* CoreMLLearningPredictor.swift */; };
+		00000027 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 10000026 /* CoreML.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		60000004 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 90000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 60000002;
+			remoteInfo = MicroSkillWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		10000001 /* MicroSkillApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroSkillApp.swift; sourceTree = "<group>"; };
@@ -76,9 +90,29 @@
 		1000001F /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		10000020 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		10000021 /* LearningModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningModel.swift; sourceTree = "<group>"; };
+		10000022 /* MicroSkill.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MicroSkill.entitlements; sourceTree = "<group>"; };
+		10000023 /* Widget Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Widget Info.plist"; path = Widget/Info.plist; sourceTree = "<group>"; };
+		10000024 /* MicroSkillWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MicroSkillWidgetExtension.entitlements; path = Widget/MicroSkillWidgetExtension.entitlements; sourceTree = "<group>"; };
+		10000025 /* CoreMLLearningPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMLLearningPredictor.swift; sourceTree = "<group>"; };
+		10000026 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		20000001 /* MicroSkill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MicroSkill.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		20000003 /* MicroSkillWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MicroSkillWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		30000003 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				00000025 /* MicroSkillWidgetExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		30000001 /* Frameworks */ = {
@@ -90,6 +124,15 @@
 				0000001D /* LocalAuthentication.framework in Frameworks */,
 				0000001E /* WidgetKit.framework in Frameworks */,
 				0000001F /* CoreLocation.framework in Frameworks */,
+				00000027 /* CoreML.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000024 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,11 +166,15 @@
 				10000016 /* SettingsView.swift */,
 				10000017 /* NotificationManager.swift */,
 				10000018 /* BiometricAuthManager.swift */,
+				10000025 /* CoreMLLearningPredictor.swift */,
 				10000019 /* MicroSkillWidget.swift */,
 				1000001A /* MicroSkillWidgetBundle.swift */,
+				10000023 /* Widget Info.plist */,
+				10000024 /* MicroSkillWidgetExtension.entitlements */,
 				10000020 /* LocationManager.swift */,
 				10000021 /* LearningModel.swift */,
 				20000002 /* Info.plist */,
+				10000022 /* MicroSkill.entitlements */,
 			);
 			path = MicroSkill;
 			sourceTree = "<group>";
@@ -136,6 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				20000001 /* MicroSkill.app */,
+				20000003 /* MicroSkillWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,6 +196,7 @@
 				1000001D /* LocalAuthentication.framework */,
 				1000001E /* WidgetKit.framework */,
 				1000001F /* CoreLocation.framework */,
+				10000026 /* CoreML.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -170,15 +219,33 @@
 			buildPhases = (
 				80000001 /* Sources */,
 				30000001 /* Frameworks */,
+				30000003 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				60000003 /* PBXTargetDependency */,
 			);
 			name = MicroSkill;
 			productName = MicroSkill;
 			productReference = 20000001 /* MicroSkill.app */;
 			productType = "com.apple.product-type.application";
+		};
+		60000002 /* MicroSkillWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 70000007 /* Build configuration list for PBXNativeTarget "MicroSkillWidgetExtension" */;
+			buildPhases = (
+				80000002 /* Sources */,
+				30000002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MicroSkillWidgetExtension;
+			productName = MicroSkillWidgetExtension;
+			productReference = 20000003 /* MicroSkillWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -188,6 +255,24 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1540;
 				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					60000001 = {
+						CreatedOnToolsVersion = 15.4;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
+					};
+					60000002 = {
+						CreatedOnToolsVersion = 15.4;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
+					};
+				};
 			};
 			buildConfigurationList = 70000002 /* Build configuration list for PBXProject "MicroSkill" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -203,6 +288,7 @@
 			projectRoot = "";
 			targets = (
 				60000001 /* MicroSkill */,
+				60000002 /* MicroSkillWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -236,14 +322,30 @@
 				00000016 /* SettingsView.swift in Sources */,
 				00000017 /* NotificationManager.swift in Sources */,
 				00000018 /* BiometricAuthManager.swift in Sources */,
-				00000019 /* MicroSkillWidget.swift in Sources */,
-				0000001A /* MicroSkillWidgetBundle.swift in Sources */,
+				00000026 /* CoreMLLearningPredictor.swift in Sources */,
 				00000020 /* LocationManager.swift in Sources */,
 				00000021 /* LearningModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		80000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000022 /* MicroSkillWidget.swift in Sources */,
+				00000023 /* MicroSkillWidgetBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		60000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 60000002 /* MicroSkillWidgetExtension */;
+			targetProxy = 60000004 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		70000003 /* Debug */ = {
@@ -285,6 +387,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MicroSkill/MicroSkill.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_TESTABILITY = YES;
@@ -305,6 +408,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MicroSkill/MicroSkill.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -315,6 +419,57 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		70000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = MicroSkill/Widget/MicroSkillWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MicroSkill/Widget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app.MicroSkillWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		70000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = MicroSkill/Widget/MicroSkillWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_NS_ASSERTIONS = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MicroSkill/Widget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app.MicroSkillWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -338,6 +493,15 @@
 			buildConfigurations = (
 				70000003 /* Debug */,
 				70000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		70000007 /* Build configuration list for PBXNativeTarget "MicroSkillWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				70000008 /* Debug */,
+				70000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -31,7 +31,11 @@ final class LearningModel {
         }
         
         // Find the hour with most completions
-        let bestHour = hourCounts.max { $0.value < $1.value }?.key ?? 9
+        let fallbackHour = hourCounts.max { $0.value < $1.value }?.key ?? 9
+        let bestHour = CoreMLLearningPredictor.shared.predictedOptimalHour(
+            fallback: fallbackHour,
+            features: predictionFeatures(fallbackOptimalHour: fallbackHour)
+        )
         
         // Store for insights
         defaults.set(bestHour, forKey: "predictedOptimalHour")
@@ -92,19 +96,26 @@ final class LearningModel {
             $0.category == goalCategory && $0.isCompleted
         }.count
         
-        if goalCompleted < 2 {
-            return goalCategory
-        }
+        let fallbackCategory: String
         
         // Otherwise, recommend based on weakest area or variety
-        let categories = ["Tech", "Productivity", "General Knowledge"]
-        let categoryCounts = categories.map { cat in
-            (category: cat, count: DataStore.shared.lessons.filter {
-                $0.category == cat && $0.isCompleted
-            }.count)
+        if goalCompleted < 2 {
+            fallbackCategory = goalCategory
+        } else {
+            let categories = ["Tech", "Productivity", "General Knowledge"]
+            let categoryCounts = categories.map { cat in
+                (category: cat, count: DataStore.shared.lessons.filter {
+                    $0.category == cat && $0.isCompleted
+                }.count)
+            }
+            
+            fallbackCategory = categoryCounts.min { $0.count < $1.count }?.category ?? goalCategory
         }
         
-        return categoryCounts.min { $0.count < $1.count }?.category ?? goalCategory
+        return CoreMLLearningPredictor.shared.recommendedCategory(
+            fallback: fallbackCategory,
+            features: predictionFeatures(fallbackOptimalHour: predictOptimalLearningHour())
+        )
     }
     
     // MARK: - Difficulty Progression
@@ -116,7 +127,14 @@ final class LearningModel {
         let accuracy = quizAccuracy()
         
         // Ready if completed > 50% and quiz accuracy > 70%
-        return completedCount >= totalLessons / 2 && accuracy > 0.7
+        let fallbackReadiness = completedCount >= totalLessons / 2 && accuracy > 0.7
+        let fallbackScore = fallbackReadiness ? 1.0 : 0.0
+        let score = CoreMLLearningPredictor.shared.readinessScore(
+            fallback: fallbackScore,
+            features: predictionFeatures(fallbackOptimalHour: predictOptimalLearningHour())
+        )
+        
+        return score > 0.7
     }
     
     /// Calculates overall quiz accuracy
@@ -143,5 +161,29 @@ final class LearningModel {
             return "Excellent consistency! You're mastering \(peakPerformanceCategory()). Keep it up!"
         }
     }
+    
+    // MARK: - Core ML Feature Preparation
+    
+    private func predictionFeatures(fallbackOptimalHour: Int) -> LearningPredictionFeatures {
+        let userGoal = UserDefaults.standard.string(forKey: "userGoal") ?? "Tech Skills"
+        let goalCategoryIndex: Int
+        
+        switch userGoal {
+        case "Productivity":
+            goalCategoryIndex = 1
+        case "General Knowledge":
+            goalCategoryIndex = 2
+        default:
+            goalCategoryIndex = 0
+        }
+        
+        return LearningPredictionFeatures(
+            completedLessons: DataStore.shared.completedLessonsCount,
+            totalLessons: DataStore.shared.totalLessonsCount,
+            streak: DataStore.shared.progress.streak,
+            activeDays: DataStore.shared.dailyCompletionCounts(forDays: 14).filter { $0.count > 0 }.count,
+            goalCategoryIndex: goalCategoryIndex,
+            fallbackOptimalHour: fallbackOptimalHour
+        )
+    }
 }
-

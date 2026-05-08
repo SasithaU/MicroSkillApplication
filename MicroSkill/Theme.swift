@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum Theme {
     // MARK: - Colors
@@ -63,17 +64,37 @@ enum Theme {
 
 // MARK: - Reusable Card Style
 struct CardStyle: ViewModifier {
+    private var highContrastEnabled: Bool {
+        UIAccessibility.isDarkerSystemColorsEnabled
+    }
+
+    private var reduceTransparencyEnabled: Bool {
+        UIAccessibility.isReduceTransparencyEnabled
+    }
+
     func body(content: Content) -> some View {
         content
             .padding(Theme.padding)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
+            .background(
+                (reduceTransparencyEnabled ? Theme.cardBackground : Color.clear),
+                in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
+            )
+            .background {
+                if !reduceTransparencyEnabled {
+                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
+                        .fill(.regularMaterial)
+                }
+            }
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
-                    .stroke(Theme.separator, lineWidth: 0.5)
+                    .stroke(
+                        highContrastEnabled ? Color.primary.opacity(0.65) : Theme.separator,
+                        lineWidth: highContrastEnabled ? 1.2 : 0.5
+                    )
             )
             .shadow(
                 color: Color.black.opacity(Theme.cardShadowOpacity),
-                radius: Theme.cardShadowRadius,
+                radius: reduceTransparencyEnabled ? 0 : Theme.cardShadowRadius,
                 x: 0,
                 y: 6
             )
@@ -88,21 +109,51 @@ extension View {
 
 // MARK: - Compact Icon Tile
 struct IconTile: View {
+    private var highContrastEnabled: Bool {
+        UIAccessibility.isDarkerSystemColorsEnabled
+    }
+
+    private var reduceTransparencyEnabled: Bool {
+        UIAccessibility.isReduceTransparencyEnabled
+    }
+
     let systemName: String
     let color: Color
     
     var body: some View {
         Image(systemName: systemName)
             .font(.system(size: 20, weight: .semibold))
-            .foregroundStyle(color)
+            .foregroundStyle(highContrastEnabled ? Color.primary : color)
             .frame(width: 44, height: 44)
-            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(
+                (highContrastEnabled || reduceTransparencyEnabled) ? Color(.systemGray5) : color.opacity(0.12),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(
+                        highContrastEnabled ? Color.primary.opacity(0.65) : Color.clear,
+                        lineWidth: highContrastEnabled ? 1 : 0
+                    )
+            )
     }
 }
 
 // MARK: - Primary Button Style
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
+        PrimaryButtonBody(configuration: configuration)
+    }
+}
+
+private struct PrimaryButtonBody: View {
+    let configuration: ButtonStyle.Configuration
+
+    private var reduceMotionEnabled: Bool {
+        UIAccessibility.isReduceMotionEnabled
+    }
+
+    var body: some View {
         configuration.label
             .font(Theme.headline())
             .foregroundColor(.white)
@@ -113,14 +164,22 @@ struct PrimaryButtonStyle: ButtonStyle {
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
             .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+            .scaleEffect(reduceMotionEnabled ? 1 : (configuration.isPressed ? 0.98 : 1.0))
+            .animation(reduceMotionEnabled ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
     }
 }
 
 // MARK: - Selection Card Style
 struct SelectionCardStyle: ButtonStyle {
     let isSelected: Bool
+
+    private var reduceMotionEnabled: Bool {
+        UIAccessibility.isReduceMotionEnabled
+    }
+
+    private var differentiateWithoutColorEnabled: Bool {
+        UIAccessibility.shouldDifferentiateWithoutColor
+    }
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -133,14 +192,21 @@ struct SelectionCardStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous)
                     .stroke(isSelected ? Theme.primary : Theme.separator, lineWidth: isSelected ? 1.5 : 0.5)
             )
+            .overlay(alignment: .topTrailing) {
+                if isSelected && differentiateWithoutColorEnabled {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.primary)
+                        .padding(10)
+                }
+            }
             .shadow(
                 color: Color.black.opacity(Theme.cardShadowOpacity),
                 radius: Theme.cardShadowRadius,
                 x: 0,
                 y: 2
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+            .scaleEffect(reduceMotionEnabled ? 1 : (configuration.isPressed ? 0.98 : 1.0))
+            .animation(reduceMotionEnabled ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
     }
 }
 

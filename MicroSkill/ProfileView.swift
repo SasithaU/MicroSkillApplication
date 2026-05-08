@@ -40,6 +40,8 @@ struct ProfileView: View {
                             }
                         }
                         .padding(.vertical, 16)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(userGoal.isEmpty ? "Profile for \(userName)." : "Profile for \(userName). Goal: \(userGoal).")
                         
                         // Stats Grid
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacing) {
@@ -71,6 +73,7 @@ struct ProfileView: View {
                                 color: Theme.accent
                             )
                         }
+                        .accessibilityElement(children: .contain)
                         
                         // Settings Link
                         NavigationLink(destination: SettingsView()) {
@@ -97,6 +100,7 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Settings. Notifications, account, and more")
+                        .accessibilityHint("Opens app settings.")
                         
                         // NEW: Logout Button
                         Button(role: .destructive) {
@@ -114,6 +118,8 @@ struct ProfileView: View {
                             .cardStyle()
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("Log out")
+                        .accessibilityHint("You will need to authenticate again to access the app.")
                         .alert("Log Out", isPresented: $showingLogoutAlert) {
                             Button("Log Out", role: .destructive) {
                                 BiometricAuthManager.shared.reset()

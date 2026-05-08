@@ -37,11 +37,13 @@ struct SettingsView: View {
                             notificationManager.cancelAllNotifications()
                         }
                     }
+                    .accessibilityHint("Turns daily learning reminder notifications on or off.")
                 
                 if notificationsEnabled {
                     DatePicker("Reminder Time",
                                selection: reminderTimeBinding,
                                displayedComponents: .hourAndMinute)
+                    .accessibilityHint("Select the time for daily reminders.")
                 }
                 
                 if !notificationManager.isAuthorized && notificationsEnabled {
@@ -61,6 +63,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .accessibilityHint("Sends a sample reminder notification.")
             }
             
             Section("Security") {
@@ -69,9 +72,14 @@ struct SettingsView: View {
                     Spacer()
                     Image(systemName: BiometricAuthManager.shared.canAuthenticate ? "checkmark.shield.fill" : "xmark.shield")
                         .foregroundColor(BiometricAuthManager.shared.canAuthenticate ? .green : .secondary)
+                    Text(BiometricAuthManager.shared.canAuthenticate ? "Available" : "Unavailable")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     Text(BiometricAuthManager.shared.biometricType)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Biometric authentication status. \(BiometricAuthManager.shared.canAuthenticate ? "Available" : "Not available"). Type: \(BiometricAuthManager.shared.biometricType).")
             }
             
             Section("Location") {
@@ -84,6 +92,7 @@ struct SettingsView: View {
                             locationManager.stopTracking()
                         }
                     }
+                    .accessibilityHint("Uses location context to suggest relevant lessons.")
                 
                 if locationManager.canUseLocation && locationEnabled {
                     Button(locationManager.hasHomeLocation ? "Update Home Location" : "Set Home Location") {
@@ -115,6 +124,8 @@ struct SettingsView: View {
                             Text(locationManager.detectedContext.capitalized)
                                 .foregroundColor(.blue)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Current context: \(locationManager.detectedContext.capitalized).")
                     }
                 }
                 

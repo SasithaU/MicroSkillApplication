@@ -6,7 +6,7 @@ struct RootView: View {
     
     var body: some View {
         if hasCompletedOnboarding {
-            if authManager.isAuthenticated || !authManager.canAuthenticate {
+            if authManager.isAuthenticated {
                 MainTabView()
                     .onAppear {
                         DataStore.shared.loadData()
@@ -35,16 +35,19 @@ struct BiometricAuthView: View {
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 80))
                     .foregroundStyle(Theme.primary)
+                    .accessibilityHidden(true)
                 
                 Text("Secure Access")
                     .font(Theme.largeTitle())
                     .foregroundColor(.primary)
+                    .accessibilityAddTraits(.isHeader)
                 
                 Text("Authenticate with \(authManager.biometricType) to access your learning progress.")
                     .font(Theme.body())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+                    .accessibilityLabel("Authenticate to access your learning progress.")
                 
                 if let error = authManager.authError {
                     Text(error)
@@ -52,13 +55,14 @@ struct BiometricAuthView: View {
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
+                        .accessibilityLabel("Authentication error. \(error)")
                 }
                 
                 Button {
                     authManager.authenticate()
                 } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: "faceid")
+                        Image(systemName: authManager.biometricIconName)
                             .font(.title3)
                         Text("Authenticate with \(authManager.biometricType)")
                             .font(Theme.headline())
@@ -71,6 +75,8 @@ struct BiometricAuthView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, Theme.padding)
+                .accessibilityLabel("Authenticate with \(authManager.biometricType)")
+                .accessibilityHint("Double tap to unlock the app.")
                 
                 Spacer()
             }

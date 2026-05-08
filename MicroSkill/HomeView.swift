@@ -75,6 +75,10 @@ struct HomeView: View {
                                     .font(Theme.headline())
                                     .foregroundStyle(Theme.primary)
                             }
+
+                            Text(progressValue >= 1 ? "Complete" : "In progress")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
                             
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
@@ -89,12 +93,15 @@ struct HomeView: View {
                                 }
                             }
                             .frame(height: 12)
+                            .accessibilityHidden(true)
                             
                             Text("\(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) lessons completed")
                                 .font(Theme.caption())
                                 .foregroundColor(.secondary)
                         }
                         .cardStyle()
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Your progress is \(Int(progressValue * 100)) percent. \(store.lessons.filter(\.isCompleted).count) of \(store.lessons.count) lessons completed.")
                         
                         // View Learning Path
                         NavigationLink(destination: LearningPathView()) {

@@ -1,11 +1,17 @@
 import SwiftUI
 
 struct QuizView: View {
+    private struct QuizResultPayload: Identifiable, Hashable {
+        let id = UUID()
+        let isCorrect: Bool
+        let correctAnswer: String
+    }
+
     let quiz: Quiz
     let lesson: Lesson
     @EnvironmentObject var store: DataStore
     @State private var selectedIndex: Int? = nil
-    @State private var showResult = false
+    @State private var resultPayload: QuizResultPayload?
     
     var body: some View {
         ZStack {
@@ -34,10 +40,10 @@ struct QuizView: View {
                                 option: option,
                                 index: index,
                                 selectedIndex: selectedIndex,
-                                showResult: showResult,
+                                showResult: resultPayload != nil,
                                 correctIndex: quiz.correctAnswerIndex
                             ) {
-                                if !showResult {
+                                if resultPayload == nil {
                                     withAnimation(.spring(response: 0.3)) {
                                         selectedIndex = index
                                     }
@@ -50,7 +56,15 @@ struct QuizView: View {
                     
                     // Submit
                     Button {
-                        showResult = true
+                        guard
+                            let selectedIndex,
+                            quiz.options.indices.contains(quiz.correctAnswerIndex)
+                        else { return }
+
+                        resultPayload = QuizResultPayload(
+                            isCorrect: selectedIndex == quiz.correctAnswerIndex,
+                            correctAnswer: quiz.options[quiz.correctAnswerIndex]
+                        )
                     } label: {
                         HStack(spacing: 10) {
                             Text("Submit Answer")
@@ -74,11 +88,16 @@ struct QuizView: View {
         }
         .navigationTitle("Quiz")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(isPresented: $showResult) {
+        .id(quiz.id)
+        .onAppear {
+            selectedIndex = nil
+            resultPayload = nil
+        }
+        .navigationDestination(item: $resultPayload) { payload in
             QuizResultView(
-                isCorrect: selectedIndex == quiz.correctAnswerIndex,
+                isCorrect: payload.isCorrect,
                 lesson: lesson,
-                correctAnswer: quiz.options[quiz.correctAnswerIndex]
+                correctAnswer: payload.correctAnswer
             )
         }
     }

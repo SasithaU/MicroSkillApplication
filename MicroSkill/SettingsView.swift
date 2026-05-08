@@ -7,8 +7,13 @@ struct SettingsView: View {
     @AppStorage("userName") private var userName = ""
     @AppStorage("userGoal") private var userGoal = ""
     @AppStorage("locationEnabled") private var locationEnabled = false
+    @AppStorage("appAccessibilityHighContrast") private var appAccessibilityHighContrast = false
+    @AppStorage("appAccessibilityReduceTransparency") private var appAccessibilityReduceTransparency = false
+    @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
+    @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var locationManager = LocationManager.shared
+    private let goalOptions = ["Tech Skills", "Productivity", "General Knowledge"]
     
     var body: some View {
         List {
@@ -20,11 +25,10 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                HStack {
-                    Text("Goal")
-                    Spacer()
-                    Text(userGoal.isEmpty ? "Not set" : userGoal)
-                        .foregroundColor(.secondary)
+                Picker("Learning Focus", selection: $userGoal) {
+                    ForEach(goalOptions, id: \.self) { option in
+                        Text(option).tag(option)
+                    }
                 }
             }
             
@@ -80,6 +84,20 @@ struct SettingsView: View {
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Biometric authentication status. \(BiometricAuthManager.shared.canAuthenticate ? "Available" : "Not available"). Type: \(BiometricAuthManager.shared.biometricType).")
+            }
+
+            Section("Accessibility") {
+                Toggle("High Contrast", isOn: $appAccessibilityHighContrast)
+                    .accessibilityHint("Increases contrast for cards and icons.")
+
+                Toggle("Reduce Transparency", isOn: $appAccessibilityReduceTransparency)
+                    .accessibilityHint("Uses solid card backgrounds instead of translucent materials.")
+
+                Toggle("Reduce Motion", isOn: $appAccessibilityReduceMotion)
+                    .accessibilityHint("Reduces motion effects in interactive components.")
+
+                Toggle("Differentiate Without Color", isOn: $appAccessibilityDifferentiateWithoutColor)
+                    .accessibilityHint("Adds non-color indicators for selected states.")
             }
             
             Section("Location") {

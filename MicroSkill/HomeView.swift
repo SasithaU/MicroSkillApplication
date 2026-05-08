@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var store: DataStore
     @State private var userName = UserDefaults.standard.string(forKey: "userName") ?? "User"
+    @AppStorage("userGoal") private var userGoal = "Tech Skills"
     
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -14,8 +15,21 @@ struct HomeView: View {
         }
     }
     
+    private var preferredCategory: String {
+        switch userGoal {
+        case "Tech Skills":
+            return "Tech"
+        case "Productivity":
+            return "Productivity"
+        case "General Knowledge":
+            return "General Knowledge"
+        default:
+            return "Tech"
+        }
+    }
+
     private var nextLesson: Lesson? {
-        store.firstIncompleteLesson()
+        store.firstIncompleteLesson(inCategory: preferredCategory) ?? store.firstIncompleteLesson()
     }
     
     private var progressValue: Double {
@@ -36,12 +50,29 @@ struct HomeView: View {
                                 .font(Theme.largeTitle())
                                 .foregroundColor(.primary)
                             
-                            Text("Your next small skill is ready.")
+                            Text("Personalized for \(userGoal).")
                                 .font(Theme.body())
                                 .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
+
+                        HStack(spacing: 10) {
+                            IconTile(systemName: "line.3.horizontal.decrease.circle.fill", color: Theme.primary)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Focus Preference")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text("Next lessons prioritize \(preferredCategory). You can change this in Settings.")
+                                    .font(Theme.body())
+                                    .foregroundColor(.primary)
+                            }
+
+                            Spacer()
+                        }
+                        .cardStyle()
                         
                         // Streak Card
                         HStack(spacing: 12) {
@@ -235,6 +266,10 @@ struct HomeView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Continue Learning")
                                     .font(Theme.headline())
+
+                                Text("Prioritized for your selected focus (\(preferredCategory)).")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
                                 
                                 NavigationLink(destination: LessonDetailView(lesson: lesson)) {
                                     VStack(alignment: .leading, spacing: 8) {

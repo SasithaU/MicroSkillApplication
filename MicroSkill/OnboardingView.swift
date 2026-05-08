@@ -80,9 +80,13 @@ struct OnboardingView: View {
     
     private var goalSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("What's your focus?")
+            Text("What's your primary focus?")
                 .font(Theme.headline())
                 .foregroundColor(.primary)
+
+            Text("We use this to personalize your learning path and recommendations. You can still explore all topics anytime.")
+                .font(Theme.caption())
+                .foregroundColor(.secondary)
             
             ForEach(goals, id: \.self) { goal in
                 GoalButton(goal: goal, isSelected: selectedGoal == goal) {
@@ -105,7 +109,7 @@ struct OnboardingView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Text("Get Started")
+                Text("Start Personalized Path")
                     .font(Theme.headline())
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.title3)

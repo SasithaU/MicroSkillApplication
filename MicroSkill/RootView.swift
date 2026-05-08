@@ -2,23 +2,37 @@ import SwiftUI
 
 struct RootView: View {
     @AppStorage("isFirstTimeUser") private var hasCompletedOnboarding = false
+    @AppStorage("appAccessibilityHighContrast") private var appAccessibilityHighContrast = false
+    @AppStorage("appAccessibilityReduceTransparency") private var appAccessibilityReduceTransparency = false
+    @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
+    @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
     @StateObject private var authManager = BiometricAuthManager.shared
     
     var body: some View {
-        if hasCompletedOnboarding {
-            if authManager.isAuthenticated {
-                MainTabView()
-                    .onAppear {
-                        DataStore.shared.loadData()
-                        NotificationManager.shared.checkAuthorization()
-                    }
+        let appAccessibility = AppAccessibilitySettings(
+            highContrast: appAccessibilityHighContrast,
+            reduceTransparency: appAccessibilityReduceTransparency,
+            reduceMotion: appAccessibilityReduceMotion,
+            differentiateWithoutColor: appAccessibilityDifferentiateWithoutColor
+        )
+
+        Group {
+            if hasCompletedOnboarding {
+                if authManager.isAuthenticated {
+                    MainTabView()
+                        .onAppear {
+                            DataStore.shared.loadData()
+                            NotificationManager.shared.checkAuthorization()
+                        }
+                } else {
+                    BiometricAuthView()
+                        .environmentObject(authManager)
+                }
             } else {
-                BiometricAuthView()
-                    .environmentObject(authManager)
+                SplashView()
             }
-        } else {
-            SplashView()
         }
+        .environment(\.appAccessibilitySettings, appAccessibility)
     }
 }
 

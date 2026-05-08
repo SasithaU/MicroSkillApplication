@@ -76,7 +76,6 @@ final class LearningModel {
     /// Predicts the next category the user should focus on
     func recommendedNextCategory() -> String {
         let userGoal = UserDefaults.standard.string(forKey: "userGoal") ?? "Tech Skills"
-        let completedCount = DataStore.shared.completedLessonsCount
         
         // Map goal to primary category
         let goalCategory: String

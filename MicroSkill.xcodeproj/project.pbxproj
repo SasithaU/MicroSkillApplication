@@ -44,6 +44,7 @@
 		00000025 /* MicroSkillWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 20000003 /* MicroSkillWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		00000026 /* CoreMLLearningPredictor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000025 /* CoreMLLearningPredictor.swift */; };
 		00000027 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 10000026 /* CoreML.framework */; };
+		00000028 /* AppAccessibilitySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000027 /* AppAccessibilitySettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +96,7 @@
 		10000024 /* MicroSkillWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MicroSkillWidgetExtension.entitlements; path = Widget/MicroSkillWidgetExtension.entitlements; sourceTree = "<group>"; };
 		10000025 /* CoreMLLearningPredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMLLearningPredictor.swift; sourceTree = "<group>"; };
 		10000026 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		10000027 /* AppAccessibilitySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAccessibilitySettings.swift; sourceTree = "<group>"; };
 		20000001 /* MicroSkill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MicroSkill.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		20000003 /* MicroSkillWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MicroSkillWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -167,6 +169,7 @@
 				10000017 /* NotificationManager.swift */,
 				10000018 /* BiometricAuthManager.swift */,
 				10000025 /* CoreMLLearningPredictor.swift */,
+				10000027 /* AppAccessibilitySettings.swift */,
 				10000019 /* MicroSkillWidget.swift */,
 				1000001A /* MicroSkillWidgetBundle.swift */,
 				10000023 /* Widget Info.plist */,
@@ -323,6 +326,7 @@
 				00000017 /* NotificationManager.swift in Sources */,
 				00000018 /* BiometricAuthManager.swift in Sources */,
 				00000026 /* CoreMLLearningPredictor.swift in Sources */,
+				00000028 /* AppAccessibilitySettings.swift in Sources */,
 				00000020 /* LocationManager.swift in Sources */,
 				00000021 /* LearningModel.swift in Sources */,
 			);
@@ -395,6 +399,7 @@
 				INFOPLIST_FILE = MicroSkill/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -416,6 +421,7 @@
 				INFOPLIST_FILE = MicroSkill/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -442,6 +448,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app.MicroSkillWidgetExtension;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -467,6 +474,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.microskill.app.MicroSkillWidgetExtension;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

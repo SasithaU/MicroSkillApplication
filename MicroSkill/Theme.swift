@@ -64,12 +64,16 @@ enum Theme {
 
 // MARK: - Reusable Card Style
 struct CardStyle: ViewModifier {
+    @Environment(\.appAccessibilitySettings) private var appAccessibility
+    @AppStorage("appAccessibilityHighContrast") private var appAccessibilityHighContrast = false
+    @AppStorage("appAccessibilityReduceTransparency") private var appAccessibilityReduceTransparency = false
+
     private var highContrastEnabled: Bool {
-        UIAccessibility.isDarkerSystemColorsEnabled
+        appAccessibility.highContrast || appAccessibilityHighContrast || UIAccessibility.isDarkerSystemColorsEnabled
     }
 
     private var reduceTransparencyEnabled: Bool {
-        UIAccessibility.isReduceTransparencyEnabled
+        appAccessibility.reduceTransparency || appAccessibilityReduceTransparency || UIAccessibility.isReduceTransparencyEnabled
     }
 
     func body(content: Content) -> some View {
@@ -109,12 +113,16 @@ extension View {
 
 // MARK: - Compact Icon Tile
 struct IconTile: View {
+    @Environment(\.appAccessibilitySettings) private var appAccessibility
+    @AppStorage("appAccessibilityHighContrast") private var appAccessibilityHighContrast = false
+    @AppStorage("appAccessibilityReduceTransparency") private var appAccessibilityReduceTransparency = false
+
     private var highContrastEnabled: Bool {
-        UIAccessibility.isDarkerSystemColorsEnabled
+        appAccessibility.highContrast || appAccessibilityHighContrast || UIAccessibility.isDarkerSystemColorsEnabled
     }
 
     private var reduceTransparencyEnabled: Bool {
-        UIAccessibility.isReduceTransparencyEnabled
+        appAccessibility.reduceTransparency || appAccessibilityReduceTransparency || UIAccessibility.isReduceTransparencyEnabled
     }
 
     let systemName: String
@@ -147,10 +155,12 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 private struct PrimaryButtonBody: View {
+    @Environment(\.appAccessibilitySettings) private var appAccessibility
+    @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
     let configuration: ButtonStyle.Configuration
 
     private var reduceMotionEnabled: Bool {
-        UIAccessibility.isReduceMotionEnabled
+        appAccessibility.reduceMotion || appAccessibilityReduceMotion || UIAccessibility.isReduceMotionEnabled
     }
 
     var body: some View {
@@ -171,14 +181,17 @@ private struct PrimaryButtonBody: View {
 
 // MARK: - Selection Card Style
 struct SelectionCardStyle: ButtonStyle {
+    @Environment(\.appAccessibilitySettings) private var appAccessibility
+    @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
+    @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
     let isSelected: Bool
 
     private var reduceMotionEnabled: Bool {
-        UIAccessibility.isReduceMotionEnabled
+        appAccessibility.reduceMotion || appAccessibilityReduceMotion || UIAccessibility.isReduceMotionEnabled
     }
 
     private var differentiateWithoutColorEnabled: Bool {
-        UIAccessibility.shouldDifferentiateWithoutColor
+        appAccessibility.differentiateWithoutColor || appAccessibilityDifferentiateWithoutColor || UIAccessibility.shouldDifferentiateWithoutColor
     }
     
     func makeBody(configuration: Configuration) -> some View {

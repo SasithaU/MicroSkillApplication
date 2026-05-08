@@ -55,6 +55,57 @@ struct LessonListView: View {
                         }
                     }
                     
+                    if store.allLessonsCompleted(in: category) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .foregroundColor(Theme.accent)
+                                Text("Category Mastery")
+                                    .font(Theme.headline())
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.top, 8)
+                            
+                            Text("Congratulations! You've finished all lessons in \(category). Now, test your knowledge.")
+                                .font(Theme.body())
+                                .foregroundColor(.secondary)
+                            
+                            VStack(spacing: 12) {
+                                ForEach(filteredLessons) { lesson in
+                                    if let quiz = store.quizForLesson(lesson.id) {
+                                        NavigationLink(destination: QuizView(quiz: quiz, lesson: lesson)) {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text(lesson.title)
+                                                        .font(.subheadline.weight(.medium))
+                                                    Text("Final Quiz")
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                                Spacer()
+                                                Image(systemName: "play.fill")
+                                                    .font(.caption)
+                                                    .foregroundColor(Theme.primary)
+                                            }
+                                            .padding()
+                                            .background(Theme.primary.opacity(0.08))
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Theme.primary.opacity(0.15), lineWidth: 1)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Theme.accent.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+                        .padding(.top, 16)
+                    }
+                    
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)

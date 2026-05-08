@@ -10,8 +10,12 @@ struct LessonDetailView: View {
         store.lessons.first(where: { $0.id == lesson.id })
     }
     
+    private var effectiveLesson: Lesson {
+        currentLesson ?? lesson
+    }
+    
     var quiz: Quiz? {
-        store.quizForLesson(lesson.id)
+        store.quizForLesson(effectiveLesson.id)
     }
     
     var body: some View {
@@ -22,7 +26,7 @@ struct LessonDetailView: View {
                 VStack(spacing: Theme.spacing * 1.5) {
                     // Category Badge + Difficulty
                     HStack {
-                        Text(lesson.category)
+                        Text(effectiveLesson.category)
                             .font(Theme.caption())
                             .foregroundStyle(Theme.primary)
                             .padding(.horizontal, 12)
@@ -31,31 +35,29 @@ struct LessonDetailView: View {
                             .clipShape(Capsule())
                         
                         // Difficulty Badge
-                        Text(lesson.difficulty.capitalized)
+                        Text(effectiveLesson.difficulty.capitalized)
                             .font(Theme.caption())
-                            .foregroundColor(difficultyColor(lesson.difficulty))
+                            .foregroundColor(difficultyColor(effectiveLesson.difficulty))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(difficultyColor(lesson.difficulty).opacity(0.12))
+                            .background(difficultyColor(effectiveLesson.difficulty).opacity(0.12))
                             .clipShape(Capsule())
                         
                         Spacer()
                         
                         // Bookmark button
                         Button {
-                            if let current = currentLesson {
-                                store.toggleSaveLesson(current)
-                            }
+                            store.toggleSaveLesson(effectiveLesson)
                         } label: {
-                            Image(systemName: (currentLesson?.isSaved ?? false) ? "bookmark.fill" : "bookmark")
+                            Image(systemName: effectiveLesson.isSaved ? "bookmark.fill" : "bookmark")
                                 .font(.title3)
-                                .foregroundColor((currentLesson?.isSaved ?? false) ? Theme.primary : .secondary)
+                                .foregroundColor(effectiveLesson.isSaved ? Theme.primary : .secondary)
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing, 8)
-                        .accessibilityLabel((currentLesson?.isSaved ?? false) ? "Remove bookmark" : "Bookmark lesson")
+                        .accessibilityLabel(effectiveLesson.isSaved ? "Remove bookmark" : "Bookmark lesson")
                         
-                        if lesson.isCompleted {
+                        if effectiveLesson.isCompleted {
                             HStack(spacing: 4) {
                                 Image(systemName: "checkmark.circle.fill")
                                 Text("Completed")
@@ -70,7 +72,7 @@ struct LessonDetailView: View {
                     }
                     
                     // Adaptive Path Warning for Advanced Lessons
-                    if lesson.difficulty == "advanced" && !LearningModel.shared.isReadyForAdvanced() {
+                    if effectiveLesson.difficulty == "advanced" && !LearningModel.shared.isReadyForAdvanced() {
                         HStack(spacing: 10) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundColor(Theme.accent)
@@ -98,7 +100,7 @@ struct LessonDetailView: View {
                     }
                     
                     // Title
-                    Text(lesson.title)
+                    Text(effectiveLesson.title)
                         .font(Theme.title())
                         .foregroundColor(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -109,7 +111,7 @@ struct LessonDetailView: View {
                             .font(Theme.headline())
                             .foregroundColor(.primary)
                         
-                        Text(lesson.content)
+                        Text(effectiveLesson.content)
                             .font(Theme.body())
                             .foregroundColor(.secondary)
                             .lineSpacing(4)
@@ -117,8 +119,28 @@ struct LessonDetailView: View {
                     .cardStyle()
                     
                     // Action Buttons
-                    if !lesson.isCompleted {
-                        if quiz != nil {
+                    if !effectiveLesson.isCompleted {
+                        // Mark as Completed is the primary action now
+                        Button {
+                            store.markLessonCompleted(effectiveLesson)
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title3)
+                                Text("Mark as Completed")
+                                    .font(Theme.headline())
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Theme.success.opacity(0.15))
+                            .foregroundStyle(Theme.success)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Mark \(effectiveLesson.title) as completed")
+                    } else {
+                        // Lesson is completed
+                        if store.allLessonsCompleted(in: effectiveLesson.category) && quiz != nil {
                             Button {
                                 showQuiz = true
                             } label: {
@@ -135,29 +157,12 @@ struct LessonDetailView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Start quiz for \(lesson.title)")
+                            .accessibilityLabel("Start quiz for \(effectiveLesson.title)")
+                            .padding(.bottom, 8)
                         }
                         
-                        Button {
-                            store.markLessonCompleted(lesson)
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.title3)
-                                Text("Mark as Completed")
-                                    .font(Theme.headline())
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Theme.success.opacity(0.15))
-                            .foregroundStyle(Theme.success)
-                            .clipShape(RoundedRectangle(cornerRadius: Theme.controlCornerRadius, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Mark \(lesson.title) as completed")
-                    } else {
                         // Next lesson navigation
-                        if let next = store.nextLesson(after: lesson) {
+                        if let next = store.nextLesson(after: effectiveLesson) {
                             NavigationLink(destination: LessonDetailView(lesson: next)) {
                                 HStack(spacing: 10) {
                                     Text("Next: \(next.title)")
@@ -199,7 +204,7 @@ struct LessonDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showQuiz) {
             if let quiz = quiz {
-                QuizView(quiz: quiz, lesson: lesson)
+                QuizView(quiz: quiz, lesson: effectiveLesson)
             }
         }
     }

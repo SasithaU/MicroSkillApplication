@@ -220,6 +220,12 @@ final class DataStore: ObservableObject {
         lessons.first { !$0.isCompleted && $0.category == category }
     }
     
+    func allLessonsCompleted(in category: String) -> Bool {
+        let categoryLessons = lessons.filter { $0.category == category }
+        guard !categoryLessons.isEmpty else { return false }
+        return categoryLessons.allSatisfy(\.isCompleted)
+    }
+    
     func isLessonUnlocked(_ lesson: Lesson) -> Bool {
         let sorted = lessons.sorted(by: { $0.order < $1.order })
 

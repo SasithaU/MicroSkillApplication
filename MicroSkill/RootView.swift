@@ -72,15 +72,6 @@ struct BiometricAuthView: View {
                 .buttonStyle(.plain)
                 .padding(.horizontal, Theme.padding)
                 
-                Button {
-                    authManager.isAuthenticated = true
-                } label: {
-                    Text("Skip for Now")
-                        .font(Theme.body())
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                
                 Spacer()
             }
         }

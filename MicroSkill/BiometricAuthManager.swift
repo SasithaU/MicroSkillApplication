@@ -4,7 +4,7 @@ import SwiftUI
 class BiometricAuthManager: ObservableObject {
     static let shared = BiometricAuthManager()
     
-    @Published var isAuthenticated = false
+    @AppStorage("isAuthenticated") var isAuthenticated = false
     @Published var authError: String?
     
     private let context = LAContext()

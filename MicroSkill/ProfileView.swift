@@ -4,6 +4,7 @@ struct ProfileView: View {
     @EnvironmentObject var store: DataStore
     @AppStorage("userName") private var userName = "User"
     @AppStorage("userGoal") private var userGoal = ""
+    @State private var showingLogoutAlert = false
     
     var body: some View {
         NavigationStack {
@@ -96,6 +97,31 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Settings. Notifications, account, and more")
+                        
+                        // NEW: Logout Button
+                        Button(role: .destructive) {
+                            showingLogoutAlert = true
+                        } label: {
+                            HStack(spacing: 12) {
+                                IconTile(systemName: "rectangle.portrait.and.arrow.right", color: .red)
+                                
+                                Text("Log Out")
+                                    .font(Theme.headline())
+                                    .foregroundColor(.red)
+                                
+                                Spacer()
+                            }
+                            .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                        .alert("Log Out", isPresented: $showingLogoutAlert) {
+                            Button("Log Out", role: .destructive) {
+                                BiometricAuthManager.shared.reset()
+                            }
+                            Button("Cancel", role: .cancel) {}
+                        } message: {
+                            Text("Are you sure you want to log out? You will need to authenticate again to access your learning progress.")
+                        }
                         
                         Spacer(minLength: 40)
                     }

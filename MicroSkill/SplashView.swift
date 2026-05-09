@@ -6,6 +6,8 @@ struct SplashView: View {
     @State private var opacity: Double = 0
     @State private var symbolScale: CGFloat = 0.5
     
+    var onComplete: (() -> Void)?
+    
     var body: some View {
         ZStack {
             PremiumBackground()
@@ -51,12 +53,9 @@ struct SplashView: View {
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                 withAnimation(.easeInOut(duration: 0.5)) {
-                    isActive = true
+                    onComplete?()
                 }
             }
-        }
-        .fullScreenCover(isPresented: $isActive) {
-            RootView()
         }
     }
 }

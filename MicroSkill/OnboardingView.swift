@@ -25,10 +25,6 @@ struct OnboardingView: View {
                     .padding(.bottom, 32)
                 }
             }
-            .navigationDestination(isPresented: $hasCompletedOnboarding) {
-                MainTabView()
-                    .navigationBarHidden(true)
-            }
         }
     }
     

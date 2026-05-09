@@ -7,6 +7,7 @@ struct RootView: View {
     @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
     @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
     @StateObject private var authManager = BiometricAuthManager.shared
+    @State private var isShowingSplash = true
     
     var body: some View {
         let appAccessibility = AppAccessibilitySettings(
@@ -17,27 +18,33 @@ struct RootView: View {
         )
 
         Group {
-            if hasCompletedOnboarding {
-                if authManager.isAuthenticated {
+            if isShowingSplash {
+                SplashView {
+                    withAnimation {
+                        isShowingSplash = false
+                    }
+                }
+            } else if !hasCompletedOnboarding {
+                OnboardingView()
+            } else if !authManager.isAuthenticated {
+                BiometricAuthView()
+                    .environmentObject(authManager)
+            } else {
                     MainTabView()
                         .onAppear {
                             DataStore.shared.loadData()
                             NotificationManager.shared.checkAuthorization()
                         }
-                } else {
-                    BiometricAuthView()
-                        .environmentObject(authManager)
                 }
-            } else {
-                SplashView()
             }
-        }
-        .environment(\.appAccessibilitySettings, appAccessibility)
+            .environment(\.appAccessibilitySettings, appAccessibility)
     }
 }
 
 struct BiometricAuthView: View {
     @EnvironmentObject var authManager: BiometricAuthManager
+    @AppStorage("userName") private var userName = "User"
+    @State private var showingResetAlert = false
     
     var body: some View {
         ZStack {
@@ -61,11 +68,13 @@ struct BiometricAuthView: View {
                 }
                 
                 VStack(spacing: 12) {
-                    Text("Micro Skill")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text("Welcome back, \(userName)")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                     
-                    Text("Authenticate with \(authManager.biometricType) to unlock your learning journey.")
+                    Text(authManager.isBiometricAuthEnabled ? "Unlock with \(authManager.biometricType) to continue your learning journey." : "Tap below to continue your learning journey.")
                         .font(Theme.body())
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -81,18 +90,45 @@ struct BiometricAuthView: View {
                         .transition(.opacity)
                 }
                 
-                Button {
-                    authManager.authenticate()
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: authManager.biometricIconName)
-                        Text("Unlock with \(authManager.biometricType)")
+                VStack(spacing: 16) {
+                    Button {
+                        if authManager.isBiometricAuthEnabled {
+                            authManager.authenticate()
+                        } else {
+                            authManager.authenticateManually()
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            if authManager.isBiometricAuthEnabled {
+                                Image(systemName: authManager.biometricIconName)
+                                Text("Unlock with \(authManager.biometricType)")
+                            } else {
+                                Text("Continue Learning")
+                                Image(systemName: "arrow.right.circle.fill")
+                            }
+                        }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal, 40)
+                    .accessibilityLabel(authManager.isBiometricAuthEnabled ? "Authenticate with \(authManager.biometricType)" : "Continue Learning")
+                    
+                    Button {
+                        showingResetAlert = true
+                    } label: {
+                        Text("Not you? Reset Journey")
+                            .font(Theme.caption())
+                            .foregroundColor(.secondary)
+                            .underline()
+                    }
+                    .alert("Reset Journey", isPresented: $showingResetAlert) {
+                        Button("Reset Everything", role: .destructive) {
+                            authManager.resetAllData()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("This will clear your name, goals, and all learning progress. This action cannot be undone.")
                     }
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 40)
-                .accessibilityLabel("Authenticate with \(authManager.biometricType)")
-                .accessibilityHint("Double tap to unlock the app.")
                 
                 Spacer()
             }

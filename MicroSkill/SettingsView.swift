@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var locationManager = LocationManager.shared
+    @StateObject private var authManager = BiometricAuthManager.shared
     private let goalOptions = ["Tech Skills", "Productivity", "General Knowledge"]
     
     var body: some View {
@@ -85,19 +86,23 @@ struct SettingsView: View {
                 .listRowBackground(Color.white.opacity(0.05))
                 
                 Section("Security") {
+                    Toggle("Require Face ID to Unlock", isOn: $authManager.isBiometricAuthEnabled)
+                        .disabled(!authManager.canAuthenticate)
+                        .accessibilityHint("Requires biometric authentication whenever the app is opened.")
+
                     HStack {
-                        Text("Biometric Authentication")
+                        Text("Status")
                         Spacer()
-                        Image(systemName: BiometricAuthManager.shared.canAuthenticate ? "checkmark.shield.fill" : "xmark.shield")
-                            .foregroundColor(BiometricAuthManager.shared.canAuthenticate ? .green : .secondary)
-                        Text(BiometricAuthManager.shared.canAuthenticate ? "Available" : "Unavailable")
+                        Image(systemName: authManager.canAuthenticate ? "checkmark.shield.fill" : "xmark.shield")
+                            .foregroundColor(authManager.canAuthenticate ? .green : .secondary)
+                        Text(authManager.canAuthenticate ? "Available" : "Unavailable")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text(BiometricAuthManager.shared.biometricType)
+                        Text(authManager.biometricType)
                             .foregroundColor(.secondary)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Biometric authentication status. \(BiometricAuthManager.shared.canAuthenticate ? "Available" : "Not available"). Type: \(BiometricAuthManager.shared.biometricType).")
+                    .accessibilityLabel("Biometric authentication status. \(authManager.canAuthenticate ? "Available" : "Not available"). Type: \(authManager.biometricType).")
                 }
                 .listRowBackground(Color.white.opacity(0.05))
 

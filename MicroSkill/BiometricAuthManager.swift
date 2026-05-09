@@ -5,6 +5,7 @@ class BiometricAuthManager: ObservableObject {
     static let shared = BiometricAuthManager()
     
     @AppStorage("isAuthenticated") var isAuthenticated = false
+    @AppStorage("isBiometricAuthEnabled") var isBiometricAuthEnabled = false
     @Published var authError: String?
 
     private init() {}
@@ -60,9 +61,22 @@ class BiometricAuthManager: ObservableObject {
         }
     }
 
+    func authenticateManually() {
+        self.isAuthenticated = true
+        self.authError = nil
+    }
+
     func reset() {
         isAuthenticated = false
         authError = nil
+    }
+
+    func resetAllData() {
+        reset()
+        UserDefaults.standard.set(false, forKey: "isFirstTimeUser")
+        UserDefaults.standard.removeObject(forKey: "userName")
+        UserDefaults.standard.removeObject(forKey: "userGoal")
+        UserDefaults.standard.set(false, forKey: "isBiometricAuthEnabled")
     }
 
     private func userFacingErrorMessage(from error: Error?) -> String {

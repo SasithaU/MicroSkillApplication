@@ -1,7 +1,10 @@
 # Xcode
-*.xcuserstate
+
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
+
+*.xcuserstate
+xcuserdata/
 
 # macOS
 .DS_Store

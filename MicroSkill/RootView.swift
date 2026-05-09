@@ -52,14 +52,16 @@ struct BiometricAuthView: View {
                         .frame(width: 140, height: 140)
                         .blur(radius: 20)
                     
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 80))
-                        .foregroundStyle(Theme.heroGradient)
+                    AppLogo.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                         .premiumShadow()
                 }
                 
                 VStack(spacing: 12) {
-                    Text("Secure Access")
+                    Text("Micro Skill")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     

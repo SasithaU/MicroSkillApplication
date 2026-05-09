@@ -17,15 +17,17 @@ struct SplashView: View {
                         .frame(width: 180, height: 180)
                         .blur(radius: 20)
                     
-                    Image(systemName: "book.pages.fill")
-                        .font(.system(size: 80))
-                        .foregroundStyle(Theme.heroGradient)
+                    AppLogo.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                         .scaleEffect(symbolScale)
                         .premiumShadow()
                 }
                 
                 VStack(spacing: 12) {
-                    Text("MicroSkill")
+                    Text("Micro Skill")
                         .font(.system(size: 44, weight: .black, design: .rounded))
                         .foregroundStyle(Theme.primary)
                         .tracking(1.5)

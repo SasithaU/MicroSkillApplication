@@ -212,7 +212,7 @@ struct HomeView: View {
                             Text("Up Next")
                                 .font(Theme.headline())
                             
-                            NavigationLink(value: HomeDestination.lessonDetail(lesson)) {
+                            NavigationLink(value: HomeDestination.lessonDetail(lesson, categoryLimit: nil)) {
                                 HStack(spacing: 16) {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text(lesson.category.uppercased())

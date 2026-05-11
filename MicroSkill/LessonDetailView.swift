@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LessonDetailView: View {
     let lesson: Lesson
+    var categoryLimit: String? = nil
     @EnvironmentObject var store: DataStore
     @Environment(\.dismiss) private var dismiss
     @State private var showQuiz = false
@@ -133,8 +134,8 @@ struct LessonDetailView: View {
                                 .buttonStyle(PrimaryButtonStyle())
                             }
                             
-                            if let next = store.nextLesson(after: effectiveLesson) {
-                                NavigationLink(destination: LessonDetailView(lesson: next)) {
+                            if let next = store.nextLesson(after: effectiveLesson, inCategory: categoryLimit) {
+                                NavigationLink(destination: LessonDetailView(lesson: next, categoryLimit: categoryLimit)) {
                                     HStack {
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text("NEXT LESSON")

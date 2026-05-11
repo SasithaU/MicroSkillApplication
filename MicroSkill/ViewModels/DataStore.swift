@@ -325,8 +325,12 @@ final class DataStore: ObservableObject {
         }
     }
     
-    func nextLesson(after lesson: Lesson) -> Lesson? {
-        lessons.first { $0.order > lesson.order && !$0.isCompleted }
+    func nextLesson(after lesson: Lesson, inCategory category: String? = nil) -> Lesson? {
+        if let category = category {
+            return lessons.first { $0.category == category && $0.order > lesson.order && !$0.isCompleted }
+        } else {
+            return lessons.first { $0.order > lesson.order && !$0.isCompleted }
+        }
     }
     
     func firstIncompleteLesson() -> Lesson? {

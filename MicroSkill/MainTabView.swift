@@ -25,8 +25,8 @@ struct MainTabView: View {
                         switch destination {
                         case .learningPath:
                             LearningPathView()
-                        case .lessonDetail(let lesson):
-                            LessonDetailView(lesson: lesson)
+                        case .lessonDetail(let lesson, let categoryLimit):
+                            LessonDetailView(lesson: lesson, categoryLimit: categoryLimit)
                         case .categories:
                             CategoriesView()
                         case .profile:
@@ -34,7 +34,7 @@ struct MainTabView: View {
                         }
                     }
                     .navigationDestination(for: Lesson.self) { lesson in
-                        LessonDetailView(lesson: lesson)
+                        LessonDetailView(lesson: lesson, categoryLimit: nil)
                     }
             }
             .tabItem {

@@ -68,7 +68,7 @@ struct LessonListView: View {
                         let unlocked = store.isLessonUnlocked(lesson)
                         
                         if unlocked {
-                            NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                            NavigationLink(destination: LessonDetailView(lesson: lesson, categoryLimit: category)) {
                                 lessonRow(lesson: lesson, unlocked: true)
                             }
                             .buttonStyle(.plain)

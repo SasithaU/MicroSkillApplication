@@ -44,7 +44,7 @@ struct SavedView: View {
                         
                         VStack(spacing: 16) {
                             ForEach(store.savedLessons) { lesson in
-                                NavigationLink(destination: LessonDetailView(lesson: lesson)) {
+                                NavigationLink(destination: LessonDetailView(lesson: lesson, categoryLimit: nil)) {
                                     SavedLessonRow(lesson: lesson)
                                 }
                                 .buttonStyle(.plain)

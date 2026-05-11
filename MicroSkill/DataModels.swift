@@ -40,7 +40,7 @@ struct UserProgress: Codable {
 // Navigation destinations for Home tab
 enum HomeDestination: Hashable {
     case learningPath
-    case lessonDetail(Lesson)
+    case lessonDetail(Lesson, categoryLimit: String? = nil)
     case categories
     case profile
 }

@@ -7,10 +7,25 @@ import WidgetKit
 final class DataStore: ObservableObject {
     static let shared = DataStore()
     
+    private let groupSuiteName = "group.com.microskill.app"
+    private var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: groupSuiteName) ?? UserDefaults.standard
+    }
+    
     @Published var lessons: [Lesson] = []
     @Published var quizzes: [Quiz] = []
     @Published var categoryMasteryQuizzes: [CategoryMasteryQuiz] = []
-    @Published var progress: UserProgress = UserProgress()
+    @Published var activeSubject: String?
+    @Published var progress: UserProgress = UserProgress() {
+        didSet {
+            if let encoded = try? JSONEncoder().encode(progress) {
+                sharedDefaults.set(encoded, forKey: "user_progress_profile")
+            }
+        }
+    }
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String? = nil
+    @Published var isDataInitialized: Bool = false
     
     private let stack = CoreDataStack.shared
     private var isLoaded = false
@@ -41,34 +56,152 @@ final class DataStore: ObservableObject {
         ("Probability in Daily Life", "Use base rates and expected outcomes to make more rational everyday decisions.", "General Knowledge", "advanced", "Which concept supports more rational everyday decisions in this lesson?", ["Base rates and expected outcomes", "Pure intuition only", "Ignoring probabilities", "Random guessing"], 0)
     ]
     
-    private init() {}
+    private init() {
+        // 1. Check if it's ALREADY ready (to avoid missing the notification)
+        if stack.isReady {
+            print("[DataStore] Core Data was already ready in init. Loading...")
+            loadData()
+        }
+        
+        // 2. Also listen for the notification as a fallback
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("CoreDataStackReady"), object: nil, queue: .main) { [weak self] _ in
+            print("[DataStore] Core Data notified as ready. Loading...")
+            Task { @MainActor in
+                self?.loadData()
+            }
+        }
+    }
+    
+    // MARK: - Subject Management
+    
+    private func getInternalCategory(for subject: String) -> String {
+        return subject // Always use the exact subject string for consistency
+    }
+    
+    func setActiveSubject(_ subject: String) {
+        isLoading = true
+        activeSubject = subject
+        sharedDefaults.set(subject, forKey: "activeSubject")
+        
+        let internalCategory = getInternalCategory(for: subject)
+        errorMessage = nil
+        clearLessons(for: internalCategory)
+        
+        Task {
+            do {
+                let curriculum = try await GeminiService.shared.generateCurriculum(for: subject, previouslyCovered: [])
+                self.saveGeminiCurriculum(curriculum)
+                self.isLoading = false
+                self.fetchAll()
+            } catch {
+                self.errorMessage = "AI Error: \(error.localizedDescription)"
+                self.isLoading = false
+                self.fetchAll()
+            }
+        }
+    }
+    
+    func generateMoreLessons() {
+        guard let subject = activeSubject else { return }
+        isLoading = true
+        errorMessage = nil
+        
+        let previouslyCovered = lessons.map { $0.title }
+        
+        Task {
+            do {
+                let curriculum = try await GeminiService.shared.generateCurriculum(for: subject, previouslyCovered: previouslyCovered)
+                self.saveGeminiCurriculum(curriculum)
+                self.isLoading = false
+                self.fetchAll()
+            } catch {
+                self.errorMessage = "AI Error: \(error.localizedDescription)"
+                self.isLoading = false
+                self.fetchAll()
+            }
+        }
+    }
+    
+    private func clearLessons(for category: String) {
+        let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
+        request.predicate = NSPredicate(format: "category ==[c] %@", category)
+        
+        do {
+            let results = try stack.context.fetch(request)
+            for object in results {
+                stack.context.delete(object)
+            }
+            stack.save()
+            print("[DataStore] Cleared \(results.count) old lessons for category: \(category)")
+        } catch {
+            print("Clear lessons error: \(error)")
+        }
+    }
+    
+    private func saveGeminiCurriculum(_ curriculum: GeminiCurriculum) {
+        let internalCategory = activeSubject ?? curriculum.subject
+        
+        // Get existing count for this category to maintain order
+        let fetchRequest: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
+        fetchRequest.predicate = NSPredicate(format: "category ==[c] %@", internalCategory)
+        let existingCount = (try? stack.context.count(for: fetchRequest)) ?? 0
+        
+        for (index, gLesson) in curriculum.lessons.enumerated() {
+            let entity = LessonEntity(context: stack.context)
+            entity.id = UUID()
+            entity.title = gLesson.title
+            entity.content = gLesson.content
+            entity.category = internalCategory
+            entity.order = Int32(existingCount + index + 1)
+            entity.difficulty = gLesson.difficulty
+            entity.isCompleted = false
+            
+            if entity.entity.attributesByName.keys.contains("masteryScore") {
+                entity.setValue(0.0, forKey: "masteryScore")
+            }
+            
+            // Save Multiple Quizzes
+            for gQuiz in gLesson.quizzes {
+                let qEntity = QuizEntity(context: stack.context)
+                qEntity.id = UUID()
+                qEntity.lessonId = entity.id
+                qEntity.question = gQuiz.question
+                qEntity.options = gQuiz.options
+                qEntity.correctAnswerIndex = Int32(gQuiz.correctAnswerIndex)
+            }
+        }
+        stack.save()
+        print("[DataStore] Saved \(curriculum.lessons.count) Gemini lessons with multiple quizzes for category: \(internalCategory)")
+    }
+    
+    func finishCurrentSubject() {
+        print("[DataStore] Finishing subject: \(activeSubject ?? "None")")
+        activeSubject = nil
+        sharedDefaults.removeObject(forKey: "activeSubject")
+        
+        // Optional: Clear or archive lessons here
+        resetAllData() 
+    }
     
     // MARK: - Load
     
     func loadData() {
         guard !isLoaded else { return }
+        
+        // Load active subject from shared defaults
+        self.activeSubject = sharedDefaults.string(forKey: "activeSubject")
+        
+        // Load profile FIRST to ensure fields are present before fetchProgress triggers didSet
+        loadProfile()
+        
         isLoaded = true
+        isDataInitialized = true
         
         let context = stack.context
         
-        // Check if data already exists and if model version matches
         let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
-        let existing = (try? context.count(for: request)) ?? 0
-        let expectedCount = DummyData.lessons.count
-        
-        // Check if we need to reset because the store is empty,
-        // has an unexpected lesson count, or the schema changed
-        let needsReset = existing == 0 || existing != expectedCount || !storeHasDifficultyField()
-        
-        if needsReset {
-            resetAllData()
-        }
-        
-        if needsReset {
-            // Seed with dummy data
-            seedDummyData(context: context)
-            stack.save()
-        }
+        let totalExisting = (try? context.count(for: request)) ?? 0
+        print("[DataStore] loadData: Total lessons in DB: \(totalExisting)")
         
         fetchAll()
         updateProgress()
@@ -78,25 +211,38 @@ final class DataStore: ObservableObject {
         generateCategoryMasteryQuizzesIfNeeded()
         
         // Verify data loaded
-        print("[DataStore] Loaded \(lessons.count) lessons, \(quizzes.count) quizzes, \(categoryMasteryQuizzes.count) category mastery quizzes")
+        print("[DataStore] loadData finished. Lessons: \(lessons.count), Subject: \(activeSubject ?? "None")")
+    }
+    
+    private func loadProfile() {
+        if let data = sharedDefaults.data(forKey: "user_progress_profile"),
+           let decoded = try? JSONDecoder().decode(UserProgress.self, from: data) {
+            // Merge with current progress (which comes from CoreData usually, but here we use it for profile)
+            var current = progress
+            current.userName = decoded.userName
+            current.profileImageData = decoded.profileImageData
+            self.progress = current
+        }
+    }
+    
+    func updateProfile(name: String, imageData: Data?) {
+        var current = progress
+        current.userName = name
+        current.profileImageData = imageData
+        self.progress = current
     }
     
     private func storeHasDifficultyField() -> Bool {
-        let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
-        request.fetchLimit = 1
-        do {
-            if let entity = try stack.context.fetch(request).first {
-                // Try to access difficulty - if it doesn't exist, this will fail silently in Core Data
-                _ = entity.value(forKey: "difficulty")
-                return true
-            }
-        } catch {
-            return false
-        }
-        return false
+        guard let entity = NSEntityDescription.entity(forEntityName: "LessonEntity", in: stack.context) else { return false }
+        return entity.attributesByName.keys.contains("difficulty")
+    }
+
+    private func storeHasMasteryScoreField() -> Bool {
+        guard let entity = NSEntityDescription.entity(forEntityName: "LessonEntity", in: stack.context) else { return false }
+        return entity.attributesByName.keys.contains("masteryScore")
     }
     
-    private func resetAllData() {
+    func resetAllData() {
         let entities = ["LessonEntity", "QuizEntity", "ProgressEntity", "CategoryMasteryQuizEntity"]
         for entityName in entities {
             let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
@@ -104,16 +250,23 @@ final class DataStore: ObservableObject {
             _ = try? stack.context.execute(deleteRequest)
         }
         stack.save()
+        
+        // Clear in-memory and persistent profile/progress
+        self.progress = UserProgress()
+        sharedDefaults.removeObject(forKey: "user_progress_profile")
+        sharedDefaults.removeObject(forKey: "userName")
+        sharedDefaults.removeObject(forKey: "activeSubject")
+        
+        // Reset state
+        self.lessons = []
+        self.quizzes = []
+        self.categoryMasteryQuizzes = []
     }
     
     private func seedDummyData(context: NSManagedObjectContext) {
-        // Seed dummy lessons with some having completion dates for chart demo
-        let calendar = Calendar.current
-        let now = Date()
-        
         print("[DataStore] Seeding \(DummyData.lessons.count) lessons and \(DummyData.quizzes.count) quizzes")
         
-        for (index, lesson) in DummyData.lessons.enumerated() {
+        for lesson in DummyData.lessons {
             let entity = LessonEntity(context: context)
             entity.id = lesson.id
             entity.title = lesson.title
@@ -122,16 +275,13 @@ final class DataStore: ObservableObject {
             entity.order = Int32(lesson.order)
             entity.difficulty = lesson.difficulty
             
-            // Mark first 3 lessons as completed with scattered dates
-            if index < 3 {
-                entity.isCompleted = true
-                let daysAgo = [0, 1, 3][index]
-                if let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) {
-                    entity.completionDate = calendar.date(bySettingHour: 9 + index, minute: 30, second: 0, of: date)
-                }
-            } else {
-                entity.isCompleted = false
+            // Defensively set masteryScore if the field exists
+            if entity.entity.attributesByName.keys.contains("masteryScore") {
+                entity.setValue(lesson.masteryScore, forKey: "masteryScore")
             }
+            
+            entity.isCompleted = false
+            entity.completionDate = nil
         }
         
         for quiz in DummyData.quizzes {
@@ -155,27 +305,39 @@ final class DataStore: ObservableObject {
     
     private func fetchLessons() {
         let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
+        
+        // Filter by subject-matched internal category if we have an active subject
+        if let subject = activeSubject {
+            let internalCategory = getInternalCategory(for: subject)
+            print("[DataStore] Fetching lessons for active subject: \(subject), mapped to category: \(internalCategory)")
+            request.predicate = NSPredicate(format: "category ==[c] %@", internalCategory)
+        }
+        
         request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
         
         do {
             let entities = try stack.context.fetch(request)
-            lessons = entities.map {
-                    Lesson(
-                        id: $0.id,
-                        title: $0.title,
-                        content: $0.content,
-                        category: $0.category,
-                        isCompleted: $0.isCompleted,
-                        order: Int($0.order),
-                        completionDate: $0.completionDate,
-                        isSaved: $0.isSaved,
-                        difficulty: $0.difficulty
-                    )
-            }
-            print("[DataStore] Fetched \(lessons.count) lessons")
+            lessons = entities.map { mapEntityToLesson($0) }
+            print("[DataStore] fetchLessons: Fetched \(lessons.count) lessons for subject: \(activeSubject ?? "None")")
         } catch {
             print("[DataStore] Fetch lessons error: \(error)")
         }
+    }
+    
+    private func mapEntityToLesson(_ entity: LessonEntity) -> Lesson {
+        return Lesson(
+            id: entity.id,
+            title: entity.title,
+            content: entity.content,
+            category: entity.category,
+            isCompleted: entity.isCompleted,
+            order: Int(entity.order),
+            completionDate: entity.completionDate,
+            isSaved: entity.isSaved,
+            difficulty: entity.difficulty,
+            prerequisiteIds: [],
+            masteryScore: entity.entity.attributesByName.keys.contains("masteryScore") ? (entity.value(forKey: "masteryScore") as? Double) ?? 0.0 : 0.0
+        )
     }
     
     private func fetchQuizzes() {
@@ -226,18 +388,17 @@ final class DataStore: ObservableObject {
         do {
             let entities = try stack.context.fetch(request)
             if let entity = entities.first {
-                progress = UserProgress(
-                    completedLessons: Int(entity.completedLessons),
-                    streak: Int(entity.streak),
-                    totalPoints: Int(entity.completedLessons) * 100 + Int(entity.streak) * 50,
-                    lastAccessedLessonId: entity.lastLessonId
-                )
+                var current = progress
+                current.completedLessons = Int(entity.completedLessons)
+                current.streak = Int(entity.streak)
+                current.totalPoints = Int(entity.completedLessons) * 100 + Int(entity.streak) * 50
+                current.lastAccessedLessonId = entity.lastLessonId
+                progress = current
             } else {
                 let newEntity = ProgressEntity(context: stack.context)
                 newEntity.completedLessons = 0
                 newEntity.streak = 0
                 stack.save()
-                progress = UserProgress(streak: 0, totalPoints: 0)
             }
         } catch {
             print("Fetch progress error: \(error)")
@@ -246,8 +407,8 @@ final class DataStore: ObservableObject {
     
     // MARK: - Queries
     
-    func quizForLesson(_ lessonId: UUID) -> Quiz? {
-        quizzes.first { $0.lessonId == lessonId }
+    func quizzesForLesson(_ lessonId: UUID) -> [Quiz] {
+        quizzes.filter { $0.lessonId == lessonId }
     }
     
     func getCategoryMasteryQuizzes(for category: String) -> [CategoryMasteryQuiz] {
@@ -326,10 +487,12 @@ final class DataStore: ObservableObject {
     }
     
     func nextLesson(after lesson: Lesson, inCategory category: String? = nil) -> Lesson? {
+        let candidates = lessons.filter { $0.order > lesson.order && !$0.isCompleted && isLessonUnlocked($0) }
+        
         if let category = category {
-            return lessons.first { $0.category == category && $0.order > lesson.order && !$0.isCompleted }
+            return candidates.first { $0.category == category }
         } else {
-            return lessons.first { $0.order > lesson.order && !$0.isCompleted }
+            return candidates.first
         }
     }
     
@@ -338,7 +501,8 @@ final class DataStore: ObservableObject {
     }
     
     func firstIncompleteLesson(inCategory category: String) -> Lesson? {
-        lessons.first { !$0.isCompleted && $0.category == category }
+        lessons.filter { isLessonUnlocked($0) }
+            .first { !$0.isCompleted && $0.category == category }
     }
     
     func allLessonsCompleted(in category: String) -> Bool {
@@ -348,26 +512,24 @@ final class DataStore: ObservableObject {
     }
     
     func isLessonUnlocked(_ lesson: Lesson) -> Bool {
-        let sorted = lessons.sorted(by: { $0.order < $1.order })
-
-        // First lesson is always unlocked
-        if let first = sorted.first, first.id == lesson.id {
-            return true
+        // Find the lesson in our curriculum to get its prerequisites
+        guard let curriculumLesson = DummyData.lessons.first(where: { $0.id == lesson.id }) else {
+            return true // Fallback for dynamic lessons
         }
-
-        // Unlock if the immediately previous lesson (by order) is completed
-        guard let currentIndex = sorted.firstIndex(where: { $0.id == lesson.id }) else {
-            return false
+        
+        let prerequisites = curriculumLesson.prerequisiteIds
+        if prerequisites.isEmpty { return true }
+        
+        // All prerequisites must be completed
+        return prerequisites.allSatisfy { prereqId in
+            lessons.first(where: { $0.id == prereqId })?.isCompleted ?? false
         }
-        guard currentIndex > 0 else { return false }
-
-        return sorted[currentIndex - 1].isCompleted
     }
 
     
     // MARK: - Mutations
     
-    func markLessonCompleted(_ lesson: Lesson) {
+    func markLessonCompleted(_ lesson: Lesson, score: Double = 1.0) {
         let request: NSFetchRequest<LessonEntity> = NSFetchRequest(entityName: "LessonEntity")
         request.predicate = NSPredicate(format: "id == %@", lesson.id as CVarArg)
         
@@ -375,6 +537,12 @@ final class DataStore: ObservableObject {
             if let entity = try stack.context.fetch(request).first {
                 entity.isCompleted = true
                 entity.completionDate = Date()
+                
+                // Update mastery score if field exists
+                if entity.entity.attributesByName.keys.contains("masteryScore") {
+                    entity.setValue(score, forKey: "masteryScore")
+                }
+                
                 stack.save()
                 fetchLessons()
                 updateProgress()
@@ -426,13 +594,7 @@ final class DataStore: ObservableObject {
     }
     
     private func updateProgress() {
-        var completed = lessons.filter(\.isCompleted).count
-
-        if appendPracticeBatchIfNeeded(completedCount: completed) {
-            fetchLessons()
-            fetchQuizzes()
-            completed = lessons.filter(\.isCompleted).count
-        }
+        let completed = lessons.filter(\.isCompleted).count
 
         let streak = calculateStreak()
         let request: NSFetchRequest<ProgressEntity> = NSFetchRequest(entityName: "ProgressEntity")
@@ -450,47 +612,6 @@ final class DataStore: ObservableObject {
         }
     }
 
-    private func appendPracticeBatchIfNeeded(completedCount: Int) -> Bool {
-        guard !lessons.isEmpty, completedCount == lessons.count else {
-            return false
-        }
-
-        let startBatchIndex = UserDefaults.standard.integer(forKey: practiceBatchIndexKey)
-        let templateCount = practiceLessonTemplates.count
-        guard templateCount > 0 else { return false }
-
-        let maxOrder = lessons.map(\.order).max() ?? 0
-        let startTemplate = (startBatchIndex * practiceBatchSize) % templateCount
-
-        for offset in 0..<practiceBatchSize {
-            let template = practiceLessonTemplates[(startTemplate + offset) % templateCount]
-            let lessonId = UUID()
-
-            let entity = LessonEntity(context: stack.context)
-            entity.id = lessonId
-            entity.title = template.title
-            entity.content = template.content
-            entity.category = template.category
-            entity.isCompleted = false
-            entity.order = Int32(maxOrder + offset + 1)
-            entity.isSaved = false
-            entity.difficulty = template.difficulty
-            entity.completionDate = nil
-
-            let quizEntity = QuizEntity(context: stack.context)
-            quizEntity.id = UUID()
-            quizEntity.lessonId = lessonId
-            quizEntity.question = template.quizQuestion
-            quizEntity.options = template.quizOptions
-            quizEntity.correctAnswerIndex = Int32(template.quizCorrectIndex)
-        }
-
-        UserDefaults.standard.set(startBatchIndex + 1, forKey: practiceBatchIndexKey)
-        stack.save()
-        print("[DataStore] Added \(practiceBatchSize) new practice lessons.")
-        return true
-    }
-    
     // MARK: - Saved Lessons
     
     func toggleSaveLesson(_ lesson: Lesson) {
@@ -618,7 +739,7 @@ final class DataStore: ObservableObject {
     // MARK: - Widget Data Sharing
     
     func refreshWidget() {
-        let defaults = UserDefaults(suiteName: "group.com.microskill.app") ?? UserDefaults.standard
+        let defaults = sharedDefaults
         defaults.set(progress.streak, forKey: "widgetStreak")
         defaults.set(completedLessonsCount, forKey: "widgetCompletedLessons")
         defaults.set(totalLessonsCount, forKey: "widgetTotalLessons")
@@ -627,3 +748,132 @@ final class DataStore: ObservableObject {
     }
 }
 
+
+struct GeminiLesson: Codable {
+    let title: String
+    let content: String
+    let difficulty: String // beginner, intermediate, advanced
+    let quizzes: [GeminiQuiz]
+}
+
+struct GeminiQuiz: Codable {
+    let question: String
+    let options: [String]
+    let correctAnswerIndex: Int
+}
+
+struct GeminiCurriculum: Codable {
+    let subject: String
+    let lessons: [GeminiLesson]
+}
+
+class GeminiService {
+    static let shared = GeminiService()
+    
+    private let apiKey = "AIzaSyCQ8OYWsU2iTxOEvYG86fgXqB2UtLtdaB4"
+    private let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
+    
+    func generateCurriculum(for subject: String, previouslyCovered: [String]) async throws -> GeminiCurriculum {
+        guard !apiKey.isEmpty else {
+            throw NSError(domain: "GeminiService", code: 401, userInfo: [NSLocalizedDescriptionKey: "API Key missing"])
+        }
+        
+        let contextString = previouslyCovered.isEmpty ? "" : "Previously covered topics: \(previouslyCovered.joined(separator: ", ")). DO NOT repeat these. Build upon them."
+        
+        let prompt = """
+        Create a 4-lesson curriculum for the subject: "\(subject)".
+        \(contextString)
+        Return ONLY a JSON object in this format:
+        {
+          "subject": "\(subject)",
+          "lessons": [
+            {
+              "title": "Lesson Title",
+              "content": "High-impact micro-lesson with bullet points (approx 60 words)",
+              "difficulty": "advanced",
+              "quizzes": [
+                {
+                  "question": "A challenging question",
+                  "options": ["A", "B", "C", "D"],
+                  "correctAnswerIndex": 0
+                },
+                {
+                  "question": "Another challenging question about this lesson",
+                  "options": ["A", "B", "C", "D"],
+                  "correctAnswerIndex": 1
+                }
+              ]
+            }
+          ]
+        }
+        Ensure lessons follow a logical progression and each lesson has AT LEAST 2 different quiz questions.
+        """
+        
+        guard let url = URL(string: "\(endpoint)?key=\(apiKey)") else {
+            throw NSError(domain: "GeminiService", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "contents": [
+                [
+                    "parts": [
+                        ["text": prompt]
+                    ]
+                ]
+            ],
+            "generationConfig": [
+                "response_mime_type": "application/json"
+            ]
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let message = (errorJson?["error"] as? [String: Any])?["message"] as? String ?? "API Error"
+            throw NSError(domain: "GeminiService", code: (response as? HTTPURLResponse)?.statusCode ?? 500, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+        
+        // Parse Gemini's nested response structure
+        let geminiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
+        guard var jsonString = geminiResponse.candidates.first?.content.parts.first?.text else {
+            throw NSError(domain: "GeminiService", code: 500, userInfo: [NSLocalizedDescriptionKey: "Empty response from AI"])
+        }
+        
+        print("[GeminiService] Raw AI Response: \(jsonString)")
+        
+        // Clean markdown code blocks if present
+        if jsonString.contains("```json") {
+            jsonString = jsonString.replacingOccurrences(of: "```json", with: "")
+            jsonString = jsonString.replacingOccurrences(of: "```", with: "")
+        } else if jsonString.contains("```") {
+            jsonString = jsonString.replacingOccurrences(of: "```", with: "")
+        }
+        
+        let cleanedData = jsonString.trimmingCharacters(in: .whitespacesAndNewlines).data(using: .utf8)!
+        return try JSONDecoder().decode(GeminiCurriculum.self, from: cleanedData)
+    }
+}
+
+// MARK: - API Response Models
+struct GeminiResponse: Codable {
+    let candidates: [Candidate]
+}
+
+struct Candidate: Codable {
+    let content: GeminiContent
+}
+
+struct GeminiContent: Codable {
+    let parts: [Part]
+}
+
+struct Part: Codable {
+    let text: String
+}

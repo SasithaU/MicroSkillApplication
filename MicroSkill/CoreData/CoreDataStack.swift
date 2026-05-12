@@ -4,6 +4,7 @@ final class CoreDataStack {
     static let shared = CoreDataStack()
     
     let persistentContainer: NSPersistentContainer
+    private(set) var isReady = false
     
     private init() {
         // Programmatic model definition (no .xcdatamodeld file needed)
@@ -146,10 +147,61 @@ final class CoreDataStack {
         model.entities = [lessonEntity, quizEntity, progressEntity, categoryMasteryQuizEntity]
         
         persistentContainer = NSPersistentContainer(name: "MicroSkill", managedObjectModel: model)
+        
+        let groupID = "group.com.microskill.app"
+        let storeName = "MicroSkill.sqlite"
+        
+        // 1. Define Old and New URLs
+        let oldStoreURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent(storeName)
+        
+        let newStoreURL: URL
+        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
+            newStoreURL = groupURL.appendingPathComponent(storeName)
+        } else {
+            print("[CoreDataStack] WARNING: App Group not available, falling back to Sandbox")
+            newStoreURL = oldStoreURL
+        }
+        
+        // 2. Perform Migration if needed
+        if newStoreURL != oldStoreURL && !FileManager.default.fileExists(atPath: newStoreURL.path) {
+            if FileManager.default.fileExists(atPath: oldStoreURL.path) {
+                print("[CoreDataStack] Migrating database from sandbox to App Group...")
+                do {
+                    try FileManager.default.moveItem(at: oldStoreURL, to: newStoreURL)
+                    // Also move -wal and -shm files if they exist
+                    let walURL = oldStoreURL.appendingPathExtension("wal")
+                    let shmURL = oldStoreURL.appendingPathExtension("shm")
+                    if FileManager.default.fileExists(atPath: walURL.path) {
+                        try? FileManager.default.moveItem(at: walURL, to: newStoreURL.appendingPathExtension("wal"))
+                    }
+                    if FileManager.default.fileExists(atPath: shmURL.path) {
+                        try? FileManager.default.moveItem(at: shmURL, to: newStoreURL.appendingPathExtension("shm"))
+                    }
+                } catch {
+                    print("[CoreDataStack] Migration Error: \(error)")
+                }
+            }
+        }
+        
+        // Create directory if it doesn't exist
+        try? FileManager.default.createDirectory(at: newStoreURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        
+        let description = NSPersistentStoreDescription(url: newStoreURL)
+        description.shouldMigrateStoreAutomatically = true
+        description.shouldInferMappingModelAutomatically = true
+        persistentContainer.persistentStoreDescriptions = [description]
+        
+        print("[CoreDataStack] Store URL: \(newStoreURL.path)")
+        
         persistentContainer.loadPersistentStores { _, error in
             if let error = error as NSError? {
+                print("[CoreDataStack] CRITICAL ERROR: \(error)")
                 fatalError("Core Data load error: \(error), \(error.userInfo)")
             }
+            print("[CoreDataStack] Persistent store loaded successfully")
+            self.isReady = true
+            NotificationCenter.default.post(name: NSNotification.Name("CoreDataStackReady"), object: nil)
         }
         persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
     }
@@ -159,11 +211,14 @@ final class CoreDataStack {
     }
     
     func save() {
+        let context = persistentContainer.viewContext
         if context.hasChanges {
             do {
                 try context.save()
+                print("[CoreDataStack] Context saved successfully")
             } catch {
-                print("Core Data save error: \(error)")
+                let nserror = error as NSError
+                print("[CoreDataStack] Save error: \(nserror), \(nserror.userInfo)")
             }
         }
     }

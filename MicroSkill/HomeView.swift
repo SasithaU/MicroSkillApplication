@@ -2,8 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var store: DataStore
-    @State private var userName = UserDefaults.standard.string(forKey: "userName") ?? "User"
-    @AppStorage("userGoal") private var userGoal = "Tech Skills"
+
     
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -15,21 +14,10 @@ struct HomeView: View {
         }
     }
     
-    private var preferredCategory: String {
-        switch userGoal {
-        case "Tech Skills":
-            return "Tech"
-        case "Productivity":
-            return "Productivity"
-        case "General Knowledge":
-            return "General Knowledge"
-        default:
-            return "Tech"
-        }
-    }
+
 
     private var nextLesson: Lesson? {
-        store.firstIncompleteLesson(inCategory: preferredCategory) ?? store.firstIncompleteLesson()
+        store.firstIncompleteLesson()
     }
     
     private var progressValue: Double {
@@ -51,7 +39,7 @@ struct HomeView: View {
                                     .font(Theme.body())
                                     .foregroundColor(.secondary)
                                 
-                                Text(userName)
+                                Text(store.progress.userName ?? "User")
                                     .font(Theme.largeTitle())
                                     .foregroundColor(.primary)
                             }
@@ -59,46 +47,74 @@ struct HomeView: View {
                             Spacer()
                             
                             NavigationLink(value: HomeDestination.profile) {
-                                Image(systemName: "person.circle.fill")
-                                    .font(.system(size: 40))
-                                    .foregroundStyle(Theme.primary)
-                                    .background(Circle().fill(.ultraThinMaterial))
+                                if let data = store.progress.profileImageData, let uiImage = UIImage(data: data) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 44, height: 44)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(Theme.primary.opacity(0.2), lineWidth: 1))
+                                        .premiumShadow()
+                                } else {
+                                    Image(systemName: "person.circle.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundStyle(Theme.primary)
+                                        .background(Circle().fill(.ultraThinMaterial))
+                                }
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Profile")
                             .accessibilityHint("View your profile and account settings")
                         }
                         
-                        Text("Personalized for \(userGoal)")
-                            .font(Theme.caption())
+
+                        Text("MASTERING \(store.activeSubject?.uppercased() ?? "SKILL")")
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(Theme.heroGradient)
                             .clipShape(Capsule())
-                            .accessibilityLabel("Learning goal: \(userGoal)")
+                            .premiumShadow()
                     }
                     .padding(.top, 20)
                     
-                    // Focus Preference Card
-                    HStack(spacing: 16) {
-                        IconTile(systemName: "line.3.horizontal.decrease.circle.fill", color: Theme.primary, isGlass: true)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Current Focus")
-                                .font(Theme.caption())
-                                .foregroundColor(.secondary)
-                                .textCase(.uppercase)
-                            Text(preferredCategory)
-                                .font(Theme.headline())
-                                .foregroundColor(.primary)
+                    #if DEBUG
+                    Button("DEBUG: Print State") {
+                        print("[DEBUG] Active Subject: \(store.activeSubject ?? "nil")")
+                        print("[DEBUG] Mapped Category: \(store.activeSubject != nil ? DataStore.shared.getInternalCategory(for: store.activeSubject!) : "nil")")
+                        print("[DEBUG] Lessons Count: \(store.lessons.count)")
+                        for lesson in store.lessons {
+                            print("  - [\(lesson.category)] \(lesson.title)")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    #endif
+                    
+                    // Goal Mastery Progress
+                    VStack(spacing: 20) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Subject Progress")
+                                    .font(Theme.caption())
+                                    .foregroundColor(.secondary)
+                                    .textCase(.uppercase)
+                                Text(store.activeSubject ?? "Select a Subject")
+                                    .font(Theme.headline())
+                                    .foregroundColor(.primary)
+                            }
+                            Spacer()
+                            Text("\(Int(progressValue * 100))%")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(Theme.primary)
                         }
                         
-                        Spacer()
+                        ProgressView(value: progressValue)
+                            .tint(Theme.primary)
+                            .frame(height: 10)
                     }
                     .glassCardStyle()
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Current focus: \(preferredCategory)")
+                    .accessibilityLabel("Current focus: \(store.activeSubject ?? "Skill")")
                     
                     // Progress & Streak Row
                     HStack(spacing: Theme.spacing) {
@@ -254,8 +270,31 @@ struct HomeView: View {
                             .accessibilityHint("Double tap to start the next lesson in \(lesson.category)")
                         }
                     }
-                    
-                    Spacer(minLength: 40)
+                    // Finish Subject Button
+                    VStack(spacing: 24) {
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+                            .padding(.vertical, 10)
+                        
+                        VStack(spacing: 12) {
+                            Text("Ready for your next challenge?")
+                                .font(Theme.caption())
+                                .foregroundColor(.secondary)
+                            
+                            Button(action: {
+                                withAnimation {
+                                    store.finishCurrentSubject()
+                                }
+                            }) {
+                                HStack {
+                                    Text("Finish Learning Subject")
+                                    Image(systemName: "checkmark.seal.fill")
+                                }
+                            }
+                            .buttonStyle(PrimaryButtonStyle())
+                        }
+                        .padding(.bottom, 40)
+                    }
                 }
                 .padding(.horizontal, Theme.padding)
             }

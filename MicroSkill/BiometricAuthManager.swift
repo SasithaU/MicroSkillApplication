@@ -4,11 +4,25 @@ import SwiftUI
 class BiometricAuthManager: ObservableObject {
     static let shared = BiometricAuthManager()
     
-    @AppStorage("isAuthenticated") var isAuthenticated = false
-    @AppStorage("isBiometricAuthEnabled") var isBiometricAuthEnabled = false
+    private let groupSuiteName = "group.com.microskill.app"
+    private var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: groupSuiteName) ?? UserDefaults.standard
+    }
+    
+    @Published var isAuthenticated = false
+    @Published var isBiometricAuthEnabled = false {
+        didSet {
+            sharedDefaults.set(isBiometricAuthEnabled, forKey: "isBiometricAuthEnabled")
+        }
+    }
     @Published var authError: String?
 
-    private init() {}
+    private init() {
+        // Load initial state from shared defaults
+        // isAuthenticated always starts false to force unlock on fresh launch
+        self.isAuthenticated = false
+        self.isBiometricAuthEnabled = sharedDefaults.bool(forKey: "isBiometricAuthEnabled")
+    }
 
     var canAuthenticate: Bool {
         let context = LAContext()
@@ -52,9 +66,11 @@ class BiometricAuthManager: ObservableObject {
             DispatchQueue.main.async {
                 if success {
                     self.isAuthenticated = true
+                    self.sharedDefaults.set(true, forKey: "isAuthenticated")
                     self.authError = nil
                 } else {
                     self.isAuthenticated = false
+                    self.sharedDefaults.set(false, forKey: "isAuthenticated")
                     self.authError = self.userFacingErrorMessage(from: error)
                 }
             }
@@ -68,15 +84,17 @@ class BiometricAuthManager: ObservableObject {
 
     func reset() {
         isAuthenticated = false
+        sharedDefaults.set(false, forKey: "isAuthenticated")
         authError = nil
     }
 
     func resetAllData() {
         reset()
-        UserDefaults.standard.set(false, forKey: "isFirstTimeUser")
-        UserDefaults.standard.removeObject(forKey: "userName")
-        UserDefaults.standard.removeObject(forKey: "userGoal")
-        UserDefaults.standard.set(false, forKey: "isBiometricAuthEnabled")
+        sharedDefaults.set(false, forKey: "isFirstTimeUser")
+        sharedDefaults.removeObject(forKey: "userName")
+        sharedDefaults.removeObject(forKey: "activeSubject")
+        sharedDefaults.set(false, forKey: "isBiometricAuthEnabled")
+        self.isBiometricAuthEnabled = false
     }
 
     private func userFacingErrorMessage(from error: Error?) -> String {

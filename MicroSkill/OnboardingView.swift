@@ -1,10 +1,8 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @State private var userName = ""
-    @State private var selectedGoal = ""
-    @State private var hasCompletedOnboarding = false
-    let goals = ["Tech Skills", "Productivity", "General Knowledge"]
+    @AppStorage("isFirstTimeUser", store: UserDefaults(suiteName: "group.com.microskill.app")) private var hasCompletedOnboarding = false
+    @State private var localName = ""
     
     var body: some View {
         NavigationStack {
@@ -15,7 +13,6 @@ struct OnboardingView: View {
                     VStack(spacing: Theme.spacing * 2.5) {
                         heroSection
                         nameInputSection
-                        goalSelectionSection
                         
                         Spacer(minLength: 40)
                         
@@ -63,7 +60,7 @@ struct OnboardingView: View {
                 .font(Theme.headline())
                 .foregroundColor(.primary)
             
-            TextField("Enter your name", text: $userName)
+            TextField("Enter your name", text: $localName)
                 .font(Theme.body())
                 .padding(18)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -74,90 +71,30 @@ struct OnboardingView: View {
         }
     }
     
-    private var goalSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("What's your primary focus?")
-                .font(Theme.headline())
-                .foregroundColor(.primary)
 
-            Text("We use this to personalize your learning path and recommendations. You can still explore all topics anytime.")
-                .font(Theme.caption())
-                .foregroundColor(.secondary)
-            
-            ForEach(goals, id: \.self) { goal in
-                GoalButton(goal: goal, isSelected: selectedGoal == goal) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                        selectedGoal = goal
-                    }
-                }
-            }
-        }
-    }
     
     private var continueButton: some View {
         Button {
-            guard !userName.isEmpty, !selectedGoal.isEmpty else { return }
-            UserDefaults.standard.set(userName, forKey: "userName")
-            UserDefaults.standard.set(selectedGoal, forKey: "userGoal")
-            UserDefaults.standard.set(true, forKey: "isFirstTimeUser")
+            guard !localName.isEmpty else { return }
+            DataStore.shared.updateProfile(name: localName, imageData: nil)
+            BiometricAuthManager.shared.authenticateManually()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 hasCompletedOnboarding = true
             }
         } label: {
             HStack(spacing: 12) {
-                Text("Start Personalized Path")
+                Text("Continue to Subject Selection")
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.title2)
             }
         }
         .buttonStyle(PrimaryButtonStyle())
-        .disabled(userName.isEmpty || selectedGoal.isEmpty)
-        .opacity(userName.isEmpty || selectedGoal.isEmpty ? 0.6 : 1.0)
+        .disabled(localName.isEmpty)
+        .opacity(localName.isEmpty ? 0.6 : 1.0)
     }
 }
 
-// MARK: - Goal Button
 
-struct GoalButton: View {
-    let goal: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: goalIcon(for: goal))
-                    .font(.title2)
-                    .foregroundColor(isSelected ? Theme.primary : .secondary)
-                    .frame(width: 36, height: 36)
-                
-                Text(goal)
-                    .font(Theme.headline())
-                    .foregroundColor(isSelected ? Theme.primary : .primary)
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.primary)
-                        .font(.title3)
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .padding()
-        }
-        .buttonStyle(SelectionCardStyle(isSelected: isSelected))
-    }
-    
-    func goalIcon(for goal: String) -> String {
-        switch goal {
-        case "Tech Skills": return "laptopcomputer"
-        case "Productivity": return "checkmark.seal.fill"
-        case "General Knowledge": return "lightbulb.fill"
-        default: return "star.fill"
-        }
-    }
-}
 
 #Preview {
     OnboardingView()

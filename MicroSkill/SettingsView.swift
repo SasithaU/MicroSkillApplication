@@ -1,19 +1,21 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
-    @AppStorage("notificationHour") private var notificationHour = 9
-    @AppStorage("notificationMinute") private var notificationMinute = 0
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("userGoal") private var userGoal = ""
-    @AppStorage("locationEnabled") private var locationEnabled = false
-    @AppStorage("appAccessibilityHighContrast") private var appAccessibilityHighContrast = false
-    @AppStorage("appAccessibilityReduceTransparency") private var appAccessibilityReduceTransparency = false
-    @AppStorage("appAccessibilityReduceMotion") private var appAccessibilityReduceMotion = false
-    @AppStorage("appAccessibilityDifferentiateWithoutColor") private var appAccessibilityDifferentiateWithoutColor = false
+    @AppStorage("notificationsEnabled", store: UserDefaults(suiteName: "group.com.microskill.app")) private var notificationsEnabled = false
+    @AppStorage("notificationHour", store: UserDefaults(suiteName: "group.com.microskill.app")) private var notificationHour = 9
+    @AppStorage("notificationMinute", store: UserDefaults(suiteName: "group.com.microskill.app")) private var notificationMinute = 0
+    @AppStorage("activeSubject", store: UserDefaults(suiteName: "group.com.microskill.app")) private var userGoal = ""
+    @AppStorage("locationEnabled", store: UserDefaults(suiteName: "group.com.microskill.app")) private var locationEnabled = false
+    @AppStorage("appAccessibilityHighContrast", store: UserDefaults(suiteName: "group.com.microskill.app")) private var appAccessibilityHighContrast = false
+    @AppStorage("appAccessibilityReduceTransparency", store: UserDefaults(suiteName: "group.com.microskill.app")) private var appAccessibilityReduceTransparency = false
+    @AppStorage("appAccessibilityReduceMotion", store: UserDefaults(suiteName: "group.com.microskill.app")) private var appAccessibilityReduceMotion = false
+    @AppStorage("appAccessibilityDifferentiateWithoutColor", store: UserDefaults(suiteName: "group.com.microskill.app")) private var appAccessibilityDifferentiateWithoutColor = false
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var authManager = BiometricAuthManager.shared
+    @EnvironmentObject var store: DataStore
+    @State private var showLogoutConfirmation = false
+    @State private var showResetConfirmation = false
     private let goalOptions = ["Tech Skills", "Productivity", "General Knowledge"]
     
     var body: some View {
@@ -25,7 +27,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Name")
                         Spacer()
-                        Text(userName.isEmpty ? "Not set" : userName)
+                        Text(store.progress.userName ?? "Not set")
                             .foregroundColor(.secondary)
                     }
                     
@@ -121,8 +123,8 @@ struct SettingsView: View {
                 }
                 .listRowBackground(Color.white.opacity(0.05))
                 
-                Section("Location") {
-                    Toggle("Context-Aware Lessons", isOn: $locationEnabled)
+                Section("Contextual Learning") {
+                    Toggle("Location-Aware Suggestions", isOn: $locationEnabled)
                         .onChange(of: locationEnabled) { _, newValue in
                             if newValue {
                                 locationManager.requestAuthorization()
@@ -133,38 +135,25 @@ struct SettingsView: View {
                         }
                         .accessibilityHint("Uses location context to suggest relevant lessons.")
                     
-                    if locationManager.canUseLocation && locationEnabled {
-                        Button(locationManager.hasHomeLocation ? "Update Home Location" : "Set Home Location") {
-                            locationManager.setHomeLocation()
-                        }
-                        
-                        if locationManager.hasHomeLocation {
-                            Button("Clear Home Location") {
-                                locationManager.clearHomeLocation()
+                    if locationEnabled {
+                        NavigationLink(value: HomeDestination.locations) {
+                            HStack {
+                                Text("Manage Learning Locations")
+                                Spacer()
+                                Text("\(locationManager.savedLocations.count)")
+                                    .foregroundColor(.secondary)
                             }
-                            .tint(.red)
-                        }
-                        
-                        Button(locationManager.hasUniversityLocation ? "Update University Location" : "Set University Location") {
-                            locationManager.setUniversityLocation()
-                        }
-                        
-                        if locationManager.hasUniversityLocation {
-                            Button("Clear University Location") {
-                                locationManager.clearUniversityLocation()
-                            }
-                            .tint(.red)
                         }
                         
                         if locationManager.detectedContext != "unknown" {
                             HStack {
                                 Text("Current Context")
                                 Spacer()
-                                Text(locationManager.detectedContext.capitalized)
+                                Text(locationManager.detectedLocationName ?? locationManager.detectedContext.capitalized)
                                     .foregroundColor(.blue)
                             }
                             .accessibilityElement(children: .combine)
-                            .accessibilityLabel("Current context: \(locationManager.detectedContext.capitalized).")
+                            .accessibilityLabel("Current context: \(locationManager.detectedLocationName ?? locationManager.detectedContext.capitalized).")
                         }
                     }
                     
@@ -195,15 +184,43 @@ struct SettingsView: View {
                 
                 Section {
                     Button(role: .destructive) {
-                        resetOnboarding()
+                        showLogoutConfirmation = true
                     } label: {
-                        Text("Reset Onboarding")
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Log Out")
+                        }
+                    }
+                }
+                .listRowBackground(Color.white.opacity(0.05))
+                
+                Section {
+                    Button(role: .destructive) {
+                        showResetConfirmation = true
+                    } label: {
+                        Text("Reset Journey")
                     }
                 }
                 .listRowBackground(Color.white.opacity(0.05))
             }
             .scrollContentBackground(.hidden)
             .listStyle(.insetGrouped)
+            .alert("Log Out?", isPresented: $showLogoutConfirmation) {
+                Button("Log Out", role: .destructive) {
+                    logout()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will end your current session and return you to the onboarding screen. Your progress will be reset.")
+            }
+            .alert("Reset Journey?", isPresented: $showResetConfirmation) {
+                Button("Reset Everything", role: .destructive) {
+                    resetOnboarding()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently erase all your progress and lessons. This action cannot be undone.")
+            }
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -265,16 +282,159 @@ struct SettingsView: View {
     }
     
     private func resetOnboarding() {
-        UserDefaults.standard.set(false, forKey: "isFirstTimeUser")
-        UserDefaults.standard.removeObject(forKey: "userName")
-        UserDefaults.standard.removeObject(forKey: "userGoal")
+        let sharedDefaults = UserDefaults(suiteName: "group.com.microskill.app") ?? UserDefaults.standard
+        sharedDefaults.set(false, forKey: "isFirstTimeUser")
+        sharedDefaults.removeObject(forKey: "activeSubject")
         BiometricAuthManager.shared.reset()
         notificationManager.cancelAllNotifications()
+        DataStore.shared.activeSubject = nil // Ensure DataStore is in sync
+        DataStore.shared.resetAllData() // Clear Core Data
+    }
+    
+    private func logout() {
+        // For local-only app, logout is essentially resetting the session
+        resetOnboarding()
     }
 }
 
-#Preview {
-    NavigationStack {
-        SettingsView()
+
+struct LearningLocationsView: View {
+    @StateObject private var locationManager = LocationManager.shared
+    @State private var showAddSheet = false
+    @State private var newLocationName = ""
+    @State private var selectedCategory = "Tech"
+    private let categories = ["Tech", "Productivity", "General Knowledge", "Creative", "Business"]
+    
+    var body: some View {
+        ZStack {
+            PremiumBackground()
+            
+            List {
+                Section {
+                    Text("Add your favorite learning spots. When you're at these locations, MicroSkill will suggest relevant topics.")
+                        .font(Theme.caption())
+                        .foregroundColor(.secondary)
+                        .listRowBackground(Color.clear)
+                }
+                
+                Section("My Learning Spots") {
+                    if locationManager.savedLocations.isEmpty {
+                        Text("No locations set yet.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        ForEach(locationManager.savedLocations) { location in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(location.name)
+                                        .font(Theme.body())
+                                        .foregroundColor(.primary)
+                                    
+                                    HStack {
+                                        Image(systemName: "tag.fill")
+                                            .font(.system(size: 10))
+                                        Text(location.recommendedCategory)
+                                            .font(.system(size: 10, weight: .bold))
+                                    }
+                                    .foregroundColor(Theme.primary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Theme.primary.opacity(0.1))
+                                    .clipShape(Capsule())
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "mappin.and.ellipse")
+                                    .foregroundColor(Theme.primary)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .onDelete(perform: locationManager.removeLocation)
+                    }
+                }
+                .listRowBackground(Color.white.opacity(0.05))
+            }
+            .scrollContentBackground(.hidden)
+            .listStyle(.insetGrouped)
+        }
+        .navigationTitle("Learning Locations")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showAddSheet = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(Theme.primary)
+                }
+            }
+        }
+        .sheet(isPresented: $showAddSheet) {
+            NavigationStack {
+                ZStack {
+                    Theme.background.ignoresSafeArea()
+                    
+                    VStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("LOCATION NAME")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.secondary)
+                            
+                            TextField("e.g. My Favorite Cafe, Library", text: $newLocationName)
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("RECOMMENDED CATEGORY")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.secondary)
+                            
+                            Picker("Category", selection: $selectedCategory) {
+                                ForEach(categories, id: \.self) { category in
+                                    Text(category).tag(category)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(height: 120)
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        
+                        Text("MicroSkill will use your current GPS coordinate for this spot.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 10)
+                        
+                        Spacer()
+                        
+                        Button {
+                            locationManager.addLocation(name: newLocationName, category: selectedCategory)
+                            newLocationName = ""
+                            showAddSheet = false
+                        } label: {
+                            Text("Set Current Location")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(newLocationName.isEmpty)
+                    }
+                    .padding(24)
+                }
+                .navigationTitle("Add New Spot")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") {
+                            showAddSheet = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
     }
 }

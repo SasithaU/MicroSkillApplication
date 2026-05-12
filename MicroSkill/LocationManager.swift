@@ -7,45 +7,21 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var currentLocation: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
     @Published var detectedContext: String = "unknown"
+    @Published var detectedLocationName: String?
     @Published var isTracking = false
     
+    @Published var savedLocations: [CustomLocation] = [] {
+        didSet {
+            saveLocations()
+        }
+    }
+    
     private let manager = CLLocationManager()
-    private let geofenceRadius: CLLocationDistance = 100
+    private let geofenceRadius: CLLocationDistance = 150 // Slightly larger for better reliability
+    private let groupSuiteName = "group.com.microskill.app"
     
-    private var homeCoordinate: CLLocationCoordinate2D? {
-        get {
-            guard let lat = UserDefaults.standard.object(forKey: "homeLatitude") as? Double,
-                  let lon = UserDefaults.standard.object(forKey: "homeLongitude") as? Double else {
-                return nil
-            }
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.latitude, forKey: "homeLatitude")
-            UserDefaults.standard.set(newValue?.longitude, forKey: "homeLongitude")
-        }
-    }
-    
-    private var universityCoordinate: CLLocationCoordinate2D? {
-        get {
-            guard let lat = UserDefaults.standard.object(forKey: "uniLatitude") as? Double,
-                  let lon = UserDefaults.standard.object(forKey: "uniLongitude") as? Double else {
-                return nil
-            }
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.latitude, forKey: "uniLatitude")
-            UserDefaults.standard.set(newValue?.longitude, forKey: "uniLongitude")
-        }
-    }
-
-    var hasHomeLocation: Bool {
-        homeCoordinate != nil
-    }
-
-    var hasUniversityLocation: Bool {
-        universityCoordinate != nil
+    private var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: groupSuiteName) ?? UserDefaults.standard
     }
     
     private override init() {
@@ -53,6 +29,47 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         authorizationStatus = manager.authorizationStatus
+        loadLocations()
+    }
+    
+    private func loadLocations() {
+        if let data = sharedDefaults.data(forKey: "savedLocations"),
+           let decoded = try? JSONDecoder().decode([CustomLocation].self, from: data) {
+            self.savedLocations = decoded
+        } else {
+            // Migrate old Home/University if they exist
+            migrateOldLocations()
+        }
+    }
+    
+    private func saveLocations() {
+        if let encoded = try? JSONEncoder().encode(savedLocations) {
+            sharedDefaults.set(encoded, forKey: "savedLocations")
+        }
+    }
+    
+    private func migrateOldLocations() {
+        var migrated: [CustomLocation] = []
+        
+        let oldDefaults = UserDefaults.standard
+        if let homeLat = oldDefaults.object(forKey: "homeLatitude") as? Double,
+           let homeLon = oldDefaults.object(forKey: "homeLongitude") as? Double {
+            migrated.append(CustomLocation(name: "Home", latitude: homeLat, longitude: homeLon, recommendedCategory: "Productivity"))
+        }
+        
+        if let uniLat = oldDefaults.object(forKey: "uniLatitude") as? Double,
+           let uniLon = oldDefaults.object(forKey: "uniLongitude") as? Double {
+            migrated.append(CustomLocation(name: "University", latitude: uniLat, longitude: uniLon, recommendedCategory: "Tech"))
+        }
+        
+        if !migrated.isEmpty {
+            self.savedLocations = migrated
+            // Clean up old
+            oldDefaults.removeObject(forKey: "homeLatitude")
+            oldDefaults.removeObject(forKey: "homeLongitude")
+            oldDefaults.removeObject(forKey: "uniLatitude")
+            oldDefaults.removeObject(forKey: "uniLongitude")
+        }
     }
     
     var canUseLocation: Bool {
@@ -74,87 +91,69 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         isTracking = false
     }
     
-    func setHomeLocation() {
+    func addLocation(name: String, category: String) {
         guard let location = currentLocation else { return }
-        homeCoordinate = location.coordinate
+        let newLocation = CustomLocation(
+            name: name,
+            latitude: location.coordinate.latitude,
+            longitude: location.coordinate.longitude,
+            recommendedCategory: category
+        )
+        savedLocations.append(newLocation)
         refreshDetectedContext()
     }
     
-    func setUniversityLocation() {
-        guard let location = currentLocation else { return }
-        universityCoordinate = location.coordinate
+    func removeLocation(at offsets: IndexSet) {
+        savedLocations.remove(atOffsets: offsets)
         refreshDetectedContext()
     }
-
-    func clearHomeLocation() {
-        homeCoordinate = nil
-        refreshDetectedContext()
-    }
-
-    func clearUniversityLocation() {
-        universityCoordinate = nil
-        refreshDetectedContext()
-    }
-
+    
     private func refreshDetectedContext() {
-        let newContext = detectContext()
-        if newContext != detectedContext {
+        let (newContext, name) = detectCurrentContext()
+        if newContext != detectedContext || name != detectedLocationName {
             detectedContext = newContext
+            detectedLocationName = name
+            objectWillChange.send()
         }
-        objectWillChange.send()
     }
 
-    func detectContext() -> String {
-        guard let location = currentLocation else { return "unknown" }
+    func detectCurrentContext() -> (String, String?) {
+        guard let location = currentLocation else { return ("unknown", nil) }
         
-        // Check if at home
-        if let home = homeCoordinate {
-            let homeLocation = CLLocation(latitude: home.latitude, longitude: home.longitude)
-            if location.distance(from: homeLocation) < geofenceRadius {
-                return "home"
-            }
-        }
-        
-        // Check if at university
-        if let uni = universityCoordinate {
-            let uniLocation = CLLocation(latitude: uni.latitude, longitude: uni.longitude)
-            if location.distance(from: uniLocation) < geofenceRadius {
-                return "university"
+        for saved in savedLocations {
+            let savedLocation = CLLocation(latitude: saved.latitude, longitude: saved.longitude)
+            if location.distance(from: savedLocation) < geofenceRadius {
+                return (saved.recommendedCategory.lowercased(), saved.name)
             }
         }
         
         // Check if moving (commute)
-        if let speed = manager.location?.speed, speed > 2.0 {
-            return "commute"
+        if let speed = manager.location?.speed, speed > 2.5 {
+            return ("commute", "Commuting")
         }
         
-        return "unknown"
+        return ("unknown", nil)
     }
     
     func recommendedCategory(for context: String) -> String {
-        switch context {
-        case "home":
-            return "Productivity"
-        case "university", "school":
-            return "Tech"
-        case "commute":
+        // Now context is directly the category or "commute" or "unknown"
+        if context == "commute" {
             return "General Knowledge"
-        default:
+        } else if context == "unknown" {
             return "Tech"
         }
+        return context.capitalized
     }
     
     // MARK: - CLLocationManagerDelegate
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation = locations.last
-        let newContext = detectContext()
-        if newContext != detectedContext {
-            detectedContext = newContext
-            // Trigger contextual notification if context changed to a known place
-            if newContext != "unknown" {
-                NotificationManager.shared.scheduleContextualReminder(location: newContext)
-            }
+        refreshDetectedContext()
+        
+        // Trigger contextual notification if context is known
+        if detectedContext != "unknown" {
+            NotificationManager.shared.scheduleContextualReminder(location: detectedLocationName ?? detectedContext)
         }
     }
     
@@ -169,4 +168,3 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         print("Location error: \(error.localizedDescription)")
     }
 }
-

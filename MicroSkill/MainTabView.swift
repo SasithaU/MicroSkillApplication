@@ -3,7 +3,6 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var navigationPathHome = NavigationPath()
-    @State private var navigationPathCategories = NavigationPath()
     @State private var navigationPathProgress = NavigationPath()
     @State private var navigationPathSaved = NavigationPath()
     @State private var navigationPathProfile = NavigationPath()
@@ -31,6 +30,10 @@ struct MainTabView: View {
                             CategoriesView()
                         case .profile:
                             ProfileView()
+                        case .settings:
+                            SettingsView()
+                        case .locations:
+                            LearningLocationsView()
                         }
                     }
                     .navigationDestination(for: Lesson.self) { lesson in
@@ -42,17 +45,7 @@ struct MainTabView: View {
             }
             .tag(0)
             
-            NavigationStack(path: $navigationPathCategories) {
-                CategoriesView()
-                    .navigationDestination(for: String.self) { category in
-                        LessonListView(category: category)
-                    }
-            }
-            .tabItem {
-                Label("Categories", systemImage: "square.grid.2x2.fill")
-            }
-            .tag(1)
-            
+
             NavigationStack(path: $navigationPathProgress) {
                 ProgressDashboardView()
                     .navigationDestination(for: String.self) { destination in
@@ -64,7 +57,7 @@ struct MainTabView: View {
             .tabItem {
                 Label("Progress", systemImage: "chart.bar.fill")
             }
-            .tag(2)
+            .tag(1)
             
             NavigationStack(path: $navigationPathSaved) {
                 SavedView()
@@ -75,12 +68,12 @@ struct MainTabView: View {
             .tabItem {
                 Label("Saved", systemImage: "bookmark.fill")
             }
-            .tag(3)
+            .tag(2)
             
             NavigationStack(path: $navigationPathProfile) {
                 ProfileView()
-                    .navigationDestination(for: String.self) { destination in
-                        if destination == "settings" {
+                    .navigationDestination(for: HomeDestination.self) { destination in
+                        if destination == .settings {
                             SettingsView()
                         }
                     }
@@ -88,7 +81,7 @@ struct MainTabView: View {
             .tabItem {
                 Label("Profile", systemImage: "person.fill")
             }
-            .tag(4)
+            .tag(3)
         }
         .tint(Theme.primary)
         .onChange(of: selectedTab) { oldValue, newValue in
@@ -120,12 +113,10 @@ struct MainTabView: View {
         case 0:
             navigationPathHome = NavigationPath()
         case 1:
-            navigationPathCategories = NavigationPath()
-        case 2:
             navigationPathProgress = NavigationPath()
-        case 3:
+        case 2:
             navigationPathSaved = NavigationPath()
-        case 4:
+        case 3:
             navigationPathProfile = NavigationPath()
         default:
             break

@@ -93,7 +93,7 @@ struct QuizResultView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if isCorrect && !didMarkComplete && !lesson.isCompleted {
-                store.markLessonCompleted(lesson)
+                store.markLessonCompleted(lesson, score: 1.0)
                 didMarkComplete = true
             }
         }

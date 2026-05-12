@@ -1,165 +1,148 @@
 import SwiftUI
+import PhotosUI
 
 struct ProfileView: View {
     @EnvironmentObject var store: DataStore
-    @AppStorage("userName") private var userName = "User"
-    @AppStorage("userGoal") private var userGoal = ""
-    @State private var showingLogoutAlert = false
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var userName: String = ""
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var profileImage: Image? = nil
+    @State private var profileImageData: Data? = nil
     
     var body: some View {
         ZStack {
             PremiumBackground()
             
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 30) {
                     // Profile Header
                     VStack(spacing: 16) {
                         ZStack {
-                            Circle()
-                                .fill(Theme.heroGradient.opacity(0.1))
-                                .frame(width: 100, height: 100)
-                                .blur(radius: 10)
+                            if let profileImage = profileImage {
+                                profileImage
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 120, height: 120)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Theme.primary, lineWidth: 2))
+                                    .premiumShadow()
+                            } else {
+                                Circle()
+                                    .fill(Theme.primary.opacity(0.1))
+                                    .frame(width: 120, height: 120)
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 50))
+                                            .foregroundColor(Theme.primary)
+                                    )
+                                    .premiumShadow()
+                            }
                             
-                            Text(userName.prefix(1).uppercased())
-                                .font(.system(size: 40, weight: .bold, design: .rounded))
-                                .foregroundColor(Theme.primary)
-                                .frame(width: 100, height: 100)
+                            PhotosPicker(selection: $selectedItem, matching: .images) {
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(8)
+                                    .background(Theme.primary)
+                                    .clipShape(Circle())
+                                    .offset(x: 40, y: 40)
+                            }
+                        }
+                        .padding(.top, 40)
+                        
+                        Text("Edit Profile")
+                            .font(Theme.title())
+                    }
+                    
+                    // Stats Summary
+                    HStack(spacing: 20) {
+                        statView(title: "Lessons", value: "\(store.progress.completedLessons)", icon: "book.fill")
+                        statView(title: "Streak", value: "\(store.progress.streak)d", icon: "flame.fill")
+                        statView(title: "Points", value: "\(store.progress.totalPoints)", icon: "star.fill")
+                    }
+                    .padding(.horizontal)
+                    
+                    // Form Section
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("NAME")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.secondary)
+                            
+                            TextField("Enter your name", text: $userName)
+                                .padding()
                                 .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Theme.primary.opacity(0.2), lineWidth: 1))
-                                .premiumShadow()
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Text(userName)
-                                .font(Theme.title())
-                                .foregroundColor(.primary)
-                            
-                            if !userGoal.isEmpty {
-                                Text(userGoal)
-                                    .font(Theme.body())
-                                    .foregroundColor(.secondary)
-                            }
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.1), lineWidth: 1))
                         }
                     }
-                    .padding(.top, 40)
-                    .padding(.bottom, 20)
+                    .padding(.horizontal)
                     
-                    // Stats Grid
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        StatCard(
-                            value: "\(store.completedLessonsCount)",
-                            label: "Completed",
-                            icon: "checkmark.seal.fill",
-                            color: Theme.success
-                        )
-                        
-                        StatCard(
-                            value: "\(store.savedLessons.count)",
-                            label: "Saved Items",
-                            icon: "bookmark.fill",
-                            color: Theme.primary
-                        )
-                        
-                        StatCard(
-                            value: "\(store.progress.streak)",
-                            label: "Current Streak",
-                            icon: "flame.fill",
-                            color: .orange
-                        )
-                        
-                        StatCard(
-                            value: "\(store.totalStudyTimeMinutes())m",
-                            label: "Learning Time",
-                            icon: "clock.fill",
-                            color: Theme.accent
-                        )
+                    Spacer()
+                    
+                    // Save Button
+                    Button(action: saveProfile) {
+                        Text("Save Changes")
+                            .frame(maxWidth: .infinity)
                     }
-                    
-                    // Options List
-                    VStack(spacing: 12) {
-                        NavigationLink(value: "settings") {
-                            HStack(spacing: 16) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.secondary.opacity(0.1))
-                                        .frame(width: 40, height: 40)
-                                    Image(systemName: "gearshape.fill")
-                                        .foregroundStyle(.secondary)
-                                        .font(.system(size: 16, weight: .bold))
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Preferences")
-                                        .font(Theme.headline())
-                                        .foregroundColor(.primary)
-                                    Text("Notifications, account, and more")
-                                        .font(Theme.caption())
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .glassCardStyle()
-                        }
-                        .buttonStyle(.plain)
-                        
-                        Button(role: .destructive) {
-                            showingLogoutAlert = true
-                        } label: {
-                            HStack(spacing: 16) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.red.opacity(0.1))
-                                        .frame(width: 40, height: 40)
-                                    Image(systemName: "power")
-                                        .foregroundStyle(.red)
-                                        .font(.system(size: 16, weight: .bold))
-                                }
-                                
-                                Text("Sign Out")
-                                    .font(Theme.headline())
-                                    .foregroundColor(.red)
-                                
-                                Spacer()
-                            }
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 22))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 22)
-                                    .stroke(Color.red.opacity(0.1), lineWidth: 0.5)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .alert("Sign Out", isPresented: $showingLogoutAlert) {
-                            Button("Sign Out", role: .destructive) {
-                                BiometricAuthManager.shared.reset()
-                            }
-                            Button("Cancel", role: .cancel) {}
-                        } message: {
-                            Text("Are you sure you want to sign out? Your progress is synced to your device.")
-                        }
-                    }
-                    
-                    Spacer(minLength: 40)
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal)
+                    .padding(.bottom, 30)
                 }
-                .padding(.horizontal, Theme.padding)
             }
         }
-        .navigationTitle("")
+        .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink(value: HomeDestination.settings) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundColor(Theme.primary)
+                }
+            }
+        }
+        .onAppear {
+            userName = store.progress.userName ?? ""
+            if let data = store.progress.profileImageData, let uiImage = UIImage(data: data) {
+                profileImage = Image(uiImage: uiImage)
+                profileImageData = data
+            }
+        }
+        .onChange(of: selectedItem) { _, newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                    if let uiImage = UIImage(data: data) {
+                        profileImageData = data
+                        profileImage = Image(uiImage: uiImage)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func statView(title: String, value: String, icon: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .foregroundColor(Theme.primary)
+            Text(value)
+                .font(.system(size: 18, weight: .bold))
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .glassCardStyle()
+    }
+    
+    private func saveProfile() {
+        store.updateProfile(name: userName, imageData: profileImageData)
+        dismiss()
     }
 }
 
 #Preview {
-    NavigationStack {
-        ProfileView()
-            .environmentObject(DataStore.shared)
-    }
+    ProfileView()
+        .environmentObject(DataStore.shared)
 }

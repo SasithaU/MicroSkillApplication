@@ -5,13 +5,20 @@ struct QuizView: View {
         let id = UUID()
         let isCorrect: Bool
         let correctAnswer: String
+        let isFinalQuestion: Bool
     }
 
-    let quiz: Quiz
+    let quizzes: [Quiz]
     let lesson: Lesson
     @EnvironmentObject var store: DataStore
+    
+    @State private var currentQuizIndex: Int = 0
     @State private var selectedIndex: Int? = nil
     @State private var resultPayload: QuizResultPayload?
+    
+    private var currentQuiz: Quiz {
+        quizzes[currentQuizIndex]
+    }
     
     var body: some View {
         ZStack {
@@ -19,32 +26,49 @@ struct QuizView: View {
             
             ScrollView {
                 VStack(spacing: 28) {
+                    // Progress Bar
+                    if quizzes.count > 1 {
+                        HStack(spacing: 4) {
+                            ForEach(0..<quizzes.count, id: \.self) { index in
+                                Capsule()
+                                    .fill(index <= currentQuizIndex ? Theme.primary : Color.white.opacity(0.2))
+                                    .frame(height: 4)
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .padding(.top, 10)
+                    }
+                    
                     // Header
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Question")
-                            .font(Theme.caption())
-                            .foregroundColor(Theme.primary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Theme.primary.opacity(0.1))
-                            .clipShape(Capsule())
+                        HStack {
+                            Text("Question \(currentQuizIndex + 1) of \(quizzes.count)")
+                                .font(Theme.caption())
+                                .foregroundColor(Theme.primary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(Theme.primary.opacity(0.1))
+                                .clipShape(Capsule())
+                            
+                            Spacer()
+                        }
                         
-                        Text(quiz.question)
+                        Text(currentQuiz.question)
                             .font(Theme.title())
                             .foregroundColor(.primary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 20)
+                    .padding(.top, 10)
                     
                     // Options
                     VStack(spacing: 16) {
-                        ForEach(Array(quiz.options.enumerated()), id: \.offset) { index, option in
-                        QuizOptionButton(
+                        ForEach(Array(currentQuiz.options.enumerated()), id: \.offset) { index, option in
+                            QuizOptionButton(
                                 option: option,
                                 index: index,
                                 selectedIndex: selectedIndex,
                                 showResult: resultPayload != nil,
-                                correctIndex: quiz.correctAnswerIndex
+                                correctIndex: currentQuiz.correctAnswerIndex
                             ) {
                                 if resultPayload == nil {
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -59,16 +83,32 @@ struct QuizView: View {
                     Button {
                         guard
                             let selectedIndex,
-                            quiz.options.indices.contains(quiz.correctAnswerIndex)
+                            currentQuiz.options.indices.contains(currentQuiz.correctAnswerIndex)
                         else { return }
 
-                        resultPayload = QuizResultPayload(
-                            isCorrect: selectedIndex == quiz.correctAnswerIndex,
-                            correctAnswer: quiz.options[quiz.correctAnswerIndex]
-                        )
+                        let isCorrect = selectedIndex == currentQuiz.correctAnswerIndex
+                        let isFinal = currentQuizIndex == quizzes.count - 1
+                        
+                        if isCorrect && !isFinal {
+                            // Automatically move to next question if correct and not final
+                            withAnimation {
+                                resultPayload = QuizResultPayload(
+                                    isCorrect: true,
+                                    correctAnswer: currentQuiz.options[currentQuiz.correctAnswerIndex],
+                                    isFinalQuestion: false
+                                )
+                            }
+                        } else {
+                            // Show result view (for wrong answer or final question)
+                            resultPayload = QuizResultPayload(
+                                isCorrect: isCorrect,
+                                correctAnswer: currentQuiz.options[currentQuiz.correctAnswerIndex],
+                                isFinalQuestion: isFinal
+                            )
+                        }
                     } label: {
                         HStack {
-                            Text("Check Answer")
+                            Text(currentQuizIndex == quizzes.count - 1 ? "Check Final Answer" : "Check Answer")
                             Image(systemName: "checkmark.circle.fill")
                         }
                     }
@@ -83,17 +123,41 @@ struct QuizView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .id(quiz.id)
+        .id(currentQuiz.id)
         .onAppear {
             selectedIndex = nil
             resultPayload = nil
         }
         .navigationDestination(item: $resultPayload) { payload in
-            QuizResultView(
-                isCorrect: payload.isCorrect,
-                lesson: lesson,
-                correctAnswer: payload.correctAnswer
-            )
+            if payload.isCorrect && !payload.isFinalQuestion {
+                // Temporary view to handle transition to next question
+                VStack(spacing: 20) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(Theme.success)
+                    Text("Correct!")
+                        .font(Theme.title())
+                    Text("Ready for the next one?")
+                        .font(Theme.body())
+                        .foregroundColor(.secondary)
+                    
+                    Button("Next Question") {
+                        currentQuizIndex += 1
+                        selectedIndex = nil
+                        resultPayload = nil
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(PremiumBackground())
+            } else {
+                QuizResultView(
+                    isCorrect: payload.isCorrect,
+                    lesson: lesson,
+                    correctAnswer: payload.correctAnswer
+                )
+            }
         }
     }
 }
@@ -177,7 +241,7 @@ struct QuizOptionButton: View {
 
 #Preview {
     NavigationStack {
-        QuizView(quiz: DummyData.quizzes[0], lesson: DummyData.lessons[0])
+        QuizView(quizzes: DummyData.quizzes, lesson: DummyData.lessons[0])
             .environmentObject(DataStore.shared)
     }
 }

@@ -15,8 +15,8 @@ struct LessonDetailView: View {
         currentLesson ?? lesson
     }
     
-    var quiz: Quiz? {
-        store.quizForLesson(effectiveLesson.id)
+    var quizzes: [Quiz] {
+        store.quizzesForLesson(effectiveLesson.id)
     }
     
     var body: some View {
@@ -82,9 +82,9 @@ struct LessonDetailView: View {
                             .multilineTextAlignment(.leading)
                         
                         if effectiveLesson.isCompleted {
-                            HStack(spacing: 4) {
+                            HStack(spacing: 6) {
                                 Image(systemName: "checkmark.seal.fill")
-                                Text("Lesson Mastered")
+                                Text("Mastery: \(Int(effectiveLesson.masteryScore * 100))%")
                             }
                             .font(Theme.caption())
                             .foregroundStyle(Theme.success)
@@ -122,7 +122,7 @@ struct LessonDetailView: View {
                             }
                             .buttonStyle(PrimaryButtonStyle())
                         } else {
-                            if store.allLessonsCompleted(in: effectiveLesson.category) && quiz != nil {
+                            if store.allLessonsCompleted(in: effectiveLesson.category) && !quizzes.isEmpty {
                                 Button {
                                     showQuiz = true
                                 } label: {
@@ -167,8 +167,8 @@ struct LessonDetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showQuiz) {
-            if let quiz = quiz {
-                QuizView(quiz: quiz, lesson: effectiveLesson)
+            if !quizzes.isEmpty {
+                QuizView(quizzes: quizzes, lesson: effectiveLesson)
             }
         }
     }

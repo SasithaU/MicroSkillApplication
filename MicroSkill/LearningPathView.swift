@@ -76,6 +76,32 @@ struct LearningPathView: View {
                     }
                     .padding(.top, 10)
                     
+                    // Next Level Button
+                    if overallProgress == 1.0 {
+                        Button(action: {
+                            withAnimation {
+                                store.generateMoreLessons()
+                            }
+                        }) {
+                            HStack {
+                                if store.isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                        .padding(.trailing, 8)
+                                    Text("Architecting Next Level...")
+                                } else {
+                                    Text("Load Next Level")
+                                    Image(systemName: "sparkles")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .padding(.vertical, 20)
+                        .disabled(store.isLoading)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, Theme.padding)

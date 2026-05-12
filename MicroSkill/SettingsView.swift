@@ -136,7 +136,7 @@ struct SettingsView: View {
                         .accessibilityHint("Uses location context to suggest relevant lessons.")
                     
                     if locationEnabled {
-                        NavigationLink(value: HomeDestination.locations) {
+                        NavigationLink(destination: LocationsManagementView()) {
                             HStack {
                                 Text("Manage Learning Locations")
                                 Spacer()
@@ -296,9 +296,7 @@ struct SettingsView: View {
         resetOnboarding()
     }
 }
-
-
-struct LearningLocationsView: View {
+struct LocationsManagementView: View {
     @StateObject private var locationManager = LocationManager.shared
     @State private var showAddSheet = false
     @State private var newLocationName = ""

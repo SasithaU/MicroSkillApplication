@@ -65,5 +65,4 @@ enum HomeDestination: Hashable {
     case categories
     case profile
     case settings
-    case locations
 }

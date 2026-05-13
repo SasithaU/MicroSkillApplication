@@ -243,7 +243,7 @@ struct HomeView: View {
                                             .font(Theme.headline())
                                             .foregroundColor(.primary)
                                         
-                                        Text(lesson.content)
+                                        Text(LocalizedStringKey(lesson.content))
                                             .font(Theme.body())
                                             .foregroundColor(.secondary)
                                             .lineLimit(1)

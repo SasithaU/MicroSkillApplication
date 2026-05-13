@@ -175,7 +175,7 @@ struct LessonNodeView: View {
                         .font(Theme.headline())
                         .foregroundColor(isUnlocked ? .primary : .secondary)
                     
-                    Text(lesson.content)
+                    Text(LocalizedStringKey(lesson.content))
                         .font(Theme.body())
                         .foregroundColor(.secondary)
                         .lineLimit(1)

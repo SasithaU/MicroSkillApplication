@@ -42,7 +42,7 @@ class GeminiService {
           "lessons": [
             {
               "title": "Lesson Title",
-              "content": "High-impact micro-lesson with bullet points (approx 200 words, deep educational value)",
+              "content": "Short, easy-to-read micro-lesson using standard markdown (use **bold** for key terms and '* ' for bullet points) and relevant emojis (approx 100-150 words). Focus on key takeaways and keep it simple.",
               "difficulty": "advanced",
               "quizzes": [
                 {
@@ -59,7 +59,7 @@ class GeminiService {
             }
           ]
         }
-        Ensure lessons follow a logical progression (Beginner -> Intermediate -> Advanced) and each lesson has AT LEAST 2 different quiz questions.
+        Ensure lessons follow a logical progression (Beginner -> Intermediate -> Advanced), each lesson has AT LEAST 2 different quiz questions, and the tone is encouraging and very easy to digest.
         """
         
         guard let url = URL(string: "\(endpoint)?key=\(apiKey)") else {

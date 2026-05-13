@@ -94,7 +94,7 @@ struct LessonDetailView: View {
                     
                     // Content
                     VStack(alignment: .leading, spacing: 20) {
-                        Text(effectiveLesson.content)
+                        Text(LocalizedStringKey(effectiveLesson.content))
                             .font(.system(size: 18, weight: .regular, design: .rounded))
                             .foregroundColor(.primary.opacity(0.85))
                             .lineSpacing(8)

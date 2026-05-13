@@ -1,6 +1,6 @@
 import Foundation
 
-let apiKey = "AIzaSyCQ8OYWsU2iTxOEvYG86fgXqB2UtLtdaB4"
+let apiKey = "YOUR_API_KEY"
 let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models?key=\(apiKey)")!
 
 let semaphore = DispatchSemaphore(value: 0)

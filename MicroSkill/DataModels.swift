@@ -58,6 +58,41 @@ struct CustomLocation: Identifiable, Codable, Equatable {
     }
 }
 
+// MARK: - Gemini Models
+struct GeminiLesson: Codable {
+    let title: String
+    let content: String
+    let difficulty: String // beginner, intermediate, advanced
+    let quizzes: [GeminiQuiz]
+}
+
+struct GeminiQuiz: Codable {
+    let question: String
+    let options: [String]
+    let correctAnswerIndex: Int
+}
+
+struct GeminiCurriculum: Codable {
+    let subject: String
+    let lessons: [GeminiLesson]
+}
+
+struct GeminiResponse: Codable {
+    let candidates: [GeminiCandidate]
+}
+
+struct GeminiCandidate: Codable {
+    let content: GeminiContent
+}
+
+struct GeminiContent: Codable {
+    let parts: [GeminiPart]
+}
+
+struct GeminiPart: Codable {
+    let text: String
+}
+
 // Navigation destinations for Home tab
 enum HomeDestination: Hashable {
     case learningPath
@@ -65,4 +100,5 @@ enum HomeDestination: Hashable {
     case categories
     case profile
     case settings
+    case apiSettings
 }

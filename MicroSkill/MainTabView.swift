@@ -20,23 +20,25 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             NavigationStack(path: $navigationPathHome) {
                 HomeView()
-            }
-            .navigationDestination(for: HomeDestination.self) { destination in
-                switch destination {
-                case .learningPath:
-                    LearningPathView()
-                case .lessonDetail(let lesson, let categoryLimit):
-                    LessonDetailView(lesson: lesson, categoryLimit: categoryLimit)
-                case .categories:
-                    CategoriesView()
-                case .profile:
-                    ProfileView()
-                case .settings:
-                    SettingsView()
-                }
-            }
-            .navigationDestination(for: Lesson.self) { lesson in
-                LessonDetailView(lesson: lesson, categoryLimit: nil)
+                    .navigationDestination(for: HomeDestination.self) { destination in
+                        switch destination {
+                        case .learningPath:
+                            LearningPathView()
+                        case .lessonDetail(let lesson, let categoryLimit):
+                            LessonDetailView(lesson: lesson, categoryLimit: categoryLimit)
+                        case .categories:
+                            CategoriesView()
+                        case .profile:
+                            ProfileView()
+                        case .settings:
+                            SettingsView()
+                        case .apiSettings:
+                            APISettingsView()
+                        }
+                    }
+                    .navigationDestination(for: Lesson.self) { lesson in
+                        LessonDetailView(lesson: lesson, categoryLimit: nil)
+                    }
             }
             .tabItem {
                 Label("Home", systemImage: "house.fill")

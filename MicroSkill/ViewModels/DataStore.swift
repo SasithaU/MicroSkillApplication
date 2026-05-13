@@ -25,6 +25,11 @@ final class DataStore: ObservableObject {
     }
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
+    @Published var geminiApiKey: String = "" {
+        didSet {
+            sharedDefaults.set(geminiApiKey, forKey: "gemini_api_key")
+        }
+    }
     @Published var isDataInitialized: Bool = false
     
     private let stack = CoreDataStack.shared
@@ -176,11 +181,12 @@ final class DataStore: ObservableObject {
     
     func finishCurrentSubject() {
         print("[DataStore] Finishing subject: \(activeSubject ?? "None")")
+        if let subject = activeSubject {
+            clearLessons(for: getInternalCategory(for: subject))
+        }
         activeSubject = nil
         sharedDefaults.removeObject(forKey: "activeSubject")
-        
-        // Optional: Clear or archive lessons here
-        resetAllData() 
+        fetchAll()
     }
     
     // MARK: - Load
@@ -192,6 +198,7 @@ final class DataStore: ObservableObject {
         self.activeSubject = sharedDefaults.string(forKey: "activeSubject")
         
         // Load profile FIRST to ensure fields are present before fetchProgress triggers didSet
+        self.geminiApiKey = sharedDefaults.string(forKey: "gemini_api_key") ?? ""
         loadProfile()
         
         isLoaded = true
@@ -212,6 +219,12 @@ final class DataStore: ObservableObject {
         
         // Verify data loaded
         print("[DataStore] loadData finished. Lessons: \(lessons.count), Subject: \(activeSubject ?? "None")")
+        
+        // If we have a subject but NO lessons, trigger a generation automatically
+        if let subject = activeSubject, lessons.isEmpty, !geminiApiKey.isEmpty {
+            print("[DataStore] Lessons missing for active subject. Triggering generation...")
+            setActiveSubject(subject)
+        }
     }
     
     private func loadProfile() {
@@ -748,35 +761,20 @@ final class DataStore: ObservableObject {
     }
 }
 
-
-struct GeminiLesson: Codable {
-    let title: String
-    let content: String
-    let difficulty: String // beginner, intermediate, advanced
-    let quizzes: [GeminiQuiz]
-}
-
-struct GeminiQuiz: Codable {
-    let question: String
-    let options: [String]
-    let correctAnswerIndex: Int
-}
-
-struct GeminiCurriculum: Codable {
-    let subject: String
-    let lessons: [GeminiLesson]
-}
-
 class GeminiService {
     static let shared = GeminiService()
     
-    private let apiKey = "AIzaSyCQ8OYWsU2iTxOEvYG86fgXqB2UtLtdaB4"
-    private let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
+    private let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"
     
     func generateCurriculum(for subject: String, previouslyCovered: [String]) async throws -> GeminiCurriculum {
+        let apiKey = await DataStore.shared.geminiApiKey
+        
         guard !apiKey.isEmpty else {
-            throw NSError(domain: "GeminiService", code: 401, userInfo: [NSLocalizedDescriptionKey: "API Key missing"])
+            throw NSError(domain: "GeminiService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Gemini API Key is missing. Please go to API Settings and provide a valid key."])
         }
+        
+        let maskedKey = apiKey.count > 8 ? "\(apiKey.prefix(4))...\(apiKey.suffix(4))" : "****"
+        print("[GeminiService] Generating curriculum for \(subject) with key: \(maskedKey)")
         
         let contextString = previouslyCovered.isEmpty ? "" : "Previously covered topics: \(previouslyCovered.joined(separator: ", ")). DO NOT repeat these. Build upon them."
         
@@ -789,7 +787,7 @@ class GeminiService {
           "lessons": [
             {
               "title": "Lesson Title",
-              "content": "High-impact micro-lesson with bullet points (approx 60 words)",
+              "content": "High-impact micro-lesson with bullet points (approx 200 words, deep educational value)",
               "difficulty": "advanced",
               "quizzes": [
                 {
@@ -806,7 +804,7 @@ class GeminiService {
             }
           ]
         }
-        Ensure lessons follow a logical progression and each lesson has AT LEAST 2 different quiz questions.
+        Ensure lessons follow a logical progression (Beginner -> Intermediate -> Advanced) and each lesson has AT LEAST 2 different quiz questions.
         """
         
         guard let url = URL(string: "\(endpoint)?key=\(apiKey)") else {
@@ -834,21 +832,22 @@ class GeminiService {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
+        if let httpResponse = response as? HTTPURLResponse {
+            print("[GeminiService] Response status: \(httpResponse.statusCode)")
+        }
+        
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             let message = (errorJson?["error"] as? [String: Any])?["message"] as? String ?? "API Error"
+            print("[GeminiService] Error: \(message)")
             throw NSError(domain: "GeminiService", code: (response as? HTTPURLResponse)?.statusCode ?? 500, userInfo: [NSLocalizedDescriptionKey: message])
         }
         
-        // Parse Gemini's nested response structure
         let geminiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
         guard var jsonString = geminiResponse.candidates.first?.content.parts.first?.text else {
             throw NSError(domain: "GeminiService", code: 500, userInfo: [NSLocalizedDescriptionKey: "Empty response from AI"])
         }
         
-        print("[GeminiService] Raw AI Response: \(jsonString)")
-        
-        // Clean markdown code blocks if present
         if jsonString.contains("```json") {
             jsonString = jsonString.replacingOccurrences(of: "```json", with: "")
             jsonString = jsonString.replacingOccurrences(of: "```", with: "")
@@ -861,19 +860,4 @@ class GeminiService {
     }
 }
 
-// MARK: - API Response Models
-struct GeminiResponse: Codable {
-    let candidates: [Candidate]
-}
 
-struct Candidate: Codable {
-    let content: GeminiContent
-}
-
-struct GeminiContent: Codable {
-    let parts: [Part]
-}
-
-struct Part: Codable {
-    let text: String
-}

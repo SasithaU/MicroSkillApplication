@@ -4,7 +4,7 @@ struct GeminiLesson: Codable {
     let title: String
     let content: String
     let difficulty: String // beginner, intermediate, advanced
-    let quiz: GeminiQuiz
+    let quizzes: [GeminiQuiz]
 }
 
 struct GeminiQuiz: Codable {
@@ -21,34 +21,45 @@ struct GeminiCurriculum: Codable {
 class GeminiService {
     static let shared = GeminiService()
     
-    // REPLACE WITH YOUR ACTUAL API KEY
-    private let apiKey = "AIzaSyCQ8OYWsU2iTxOEvYG86fgXqB2UtLtdaB4"
     private let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
     
-    func generateCurriculum(for subject: String) async throws -> GeminiCurriculum {
-        guard apiKey != "AIzaSyCQ8OYWsU2iTxOEvYG86fgXqB2UtLtdaB4" else {
-            throw NSError(domain: "GeminiService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Please provide a valid Gemini API Key in GeminiService.swift"])
+    func generateCurriculum(for subject: String, previouslyCovered: [String]) async throws -> GeminiCurriculum {
+        // Fetch API Key from DataStore
+        let apiKey = await DataStore.shared.geminiApiKey
+        
+        guard !apiKey.isEmpty else {
+            throw NSError(domain: "GeminiService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Gemini API Key is missing. Please go to API Settings and provide a valid key."])
         }
+        
+        let contextString = previouslyCovered.isEmpty ? "" : "Previously covered topics: \(previouslyCovered.joined(separator: ", ")). DO NOT repeat these. Build upon them."
         
         let prompt = """
         Create a 4-lesson curriculum for the subject: "\(subject)".
+        \(contextString)
         Return ONLY a JSON object in this format:
         {
           "subject": "\(subject)",
           "lessons": [
             {
               "title": "Lesson Title",
-              "content": "Deep, factual educational content (approx 200 words)",
-              "difficulty": "beginner",
-              "quiz": {
-                "question": "A challenging question",
-                "options": ["A", "B", "C", "D"],
-                "correctAnswerIndex": 0
-              }
+              "content": "High-impact micro-lesson with bullet points (approx 200 words, deep educational value)",
+              "difficulty": "advanced",
+              "quizzes": [
+                {
+                  "question": "A challenging question",
+                  "options": ["A", "B", "C", "D"],
+                  "correctAnswerIndex": 0
+                },
+                {
+                  "question": "Another challenging question about this lesson",
+                  "options": ["A", "B", "C", "D"],
+                  "correctAnswerIndex": 1
+                }
+              ]
             }
           ]
         }
-        Ensure lessons follow a logical progression (Beginner -> Intermediate -> Advanced).
+        Ensure lessons follow a logical progression (Beginner -> Intermediate -> Advanced) and each lesson has AT LEAST 2 different quiz questions.
         """
         
         guard let url = URL(string: "\(endpoint)?key=\(apiKey)") else {
@@ -84,11 +95,20 @@ class GeminiService {
         
         // Parse Gemini's nested response structure
         let geminiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
-        guard let jsonString = geminiResponse.candidates.first?.content.parts.first?.text else {
+        guard var jsonString = geminiResponse.candidates.first?.content.parts.first?.text else {
             throw NSError(domain: "GeminiService", code: 500, userInfo: [NSLocalizedDescriptionKey: "Empty response from AI"])
         }
         
-        return try JSONDecoder().decode(GeminiCurriculum.self, from: jsonString.data(using: .utf8)!)
+        // Clean markdown code blocks if present
+        if jsonString.contains("```json") {
+            jsonString = jsonString.replacingOccurrences(of: "```json", with: "")
+            jsonString = jsonString.replacingOccurrences(of: "```", with: "")
+        } else if jsonString.contains("```") {
+            jsonString = jsonString.replacingOccurrences(of: "```", with: "")
+        }
+        
+        let cleanedData = jsonString.trimmingCharacters(in: .whitespacesAndNewlines).data(using: .utf8)!
+        return try JSONDecoder().decode(GeminiCurriculum.self, from: cleanedData)
     }
 }
 
